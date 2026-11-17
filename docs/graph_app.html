@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>IAI Research Explorer</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
+        #network { width: 100%; height: 100%; background-color: #f8f9fa; }
+        #ui-panel { position: absolute; top: 20px; left: 20px; background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; width: 260px; }
+        h2 { margin: 0 0 15px 0; font-size: 18px; color: #202124; }
+        button { display: block; width: 100%; margin-bottom: 10px; padding: 10px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s;}
+        button:hover { background: #1557b0; }
+        button.secondary { background: #5f6368; }
+        button.secondary:hover { background: #3c4043; }
+        #info-box { margin-top: 15px; font-size: 13px; color: #3c4043; line-height: 1.4; display: none; padding-top: 15px; border-top: 1px solid #e8eaed;}
+    </style>
+</head>
+<body>
+    <div id="ui-panel">
+        <h2>IAI Research Topology</h2>
+        <button id="btn-paper">View Paper Citations</button>
+        <button id="btn-author" class="secondary">View Co-Authorships</button>
+        <button id="btn-reset" class="secondary" style="display:none; background:#d93025;">Reset View</button>
+        <div id="info-box"></div>
+    </div>
+    <div id="network"></div>
+
+    <script>
+        let allNodes = [];
+        let allEdges = [];
+        let network = null;
+        let currentMode = 'paper'; // 'paper' or 'author'
+
+        // Load data dynamically
+        fetch('graph_data.json').then(r => r.json()).then(data => {
+            allNodes = data.nodes;
+            allEdges = data.edges;
+            renderGraph();
+        });
+
+        function renderGraph(filteredNodeIds = null, selectedNodeId = null) {
+            const container = document.getElementById('network');
+            
+            // Filter nodes by mode
+            let nodesToKeep = allNodes.filter(n => n.group === currentMode);
+            let edgeType = currentMode === 'paper' ? 'cited' : 'coauthor';
+            let edgesToKeep = allEdges.filter(e => e.type === edgeType);
+
+            // Apply specific node filter if a node was clicked
+            if (filteredNodeIds) {
+                nodesToKeep = nodesToKeep.filter(n => filteredNodeIds.has(n.id));
+                edgesToKeep = edgesToKeep.filter(e => filteredNodeIds.has(e.from) && filteredNodeIds.has(e.to));
+                document.getElementById('btn-reset').style.display = 'block';
+            } else {
+                document.getElementById('btn-reset').style.display = 'none';
+                document.getElementById('info-box').style.display = 'none';
+            }
+
+            // Apply black styling to the strictly selected node
+            let finalNodes = nodesToKeep.map(n => {
+                if (selectedNodeId && n.id === selectedNodeId) {
+                    return { 
+                        ...n, 
+                        color: { background: '#000000', border: '#000000' },
+                        font: { color: 'white', background: 'black' } 
+                    };
+                }
+                return n;
+            });
+
+            const data = {
+                nodes: new vis.DataSet(finalNodes),
+                edges: new vis.DataSet(edgesToKeep)
+            };
+
+            const options = {
+                nodes: { shape: 'dot', font: { size: 14, face: 'sans-serif' }, shadow: true },
+                edges: { width: 1.5, color: { inherit: 'both' }, smooth: { type: 'continuous' } },
+                physics: { stabilization: false, barnesHut: { gravitationalConstant: -3000, springLength: 150 } },
+                interaction: { hover: true, tooltipDelay: 200 }
+            };
+
+            if (currentMode === 'paper') options.edges.arrows = 'to';
+
+            if (network) network.destroy();
+            network = new vis.Network(container, data, options);
+
+            // Handle Clicks (Reshaping the graph)
+            network.on("selectNode", function (params) {
+                const nodeId = params.nodes[0];
+                const selectedNode = allNodes.find(n => n.id === nodeId);
+                
+                const relatedNodeIds = new Set([nodeId]);
+                let derivedCount = 0;
+                let referencedCount = 0;
+
+                allEdges.forEach(e => {
+                    if (e.type === edgeType) {
+                        if (e.from === nodeId) { relatedNodeIds.add(e.to); referencedCount++; }
+                        if (e.to === nodeId) { relatedNodeIds.add(e.from); derivedCount++; }
+                    }
+                });
+
+                const info = document.getElementById('info-box');
+                info.style.display = 'block';
+                if (currentMode === 'paper') {
+                    info.innerHTML = `<strong>Selected:</strong> ${selectedNode.label}<br><br>📚 References: ${referencedCount}<br>🚀 Derived: ${derivedCount}`;
+                } else {
+                    info.innerHTML = `<strong>Selected:</strong> ${selectedNode.label}<br><br>🤝 Co-authors: ${referencedCount + derivedCount}`;
+                }
+
+                // Pass both the filtered set and the specific clicked node ID
+                renderGraph(relatedNodeIds, nodeId);
+            });
+        }
+
+        document.getElementById('btn-paper').onclick = () => { currentMode = 'paper'; renderGraph(); };
+        document.getElementById('btn-author').onclick = () => { currentMode = 'author'; renderGraph(); };
+        document.getElementById('btn-reset').onclick = () => { renderGraph(); };
+    </script>
+</body>
+</html>

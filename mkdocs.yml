@@ -1,0 +1,20 @@
+site_name: IAI Research Pipeline
+site_description: Automated Research Discovery for the Institute for Artificial Intelligence
+copyright: "Copyright &copy; 2026 Daniel Redder"
+
+theme:
+  name: material
+  logo: assets/iai_logo.png
+  # UGA Official Colors mapped to Material theme
+  palette:
+    primary: custom
+    accent: custom
+
+nav:
+  - Home: index.md
+  - API Reference: api.md
+  - Graph: vis.md
+
+
+extra_css:
+  - stylesheets/extra.css

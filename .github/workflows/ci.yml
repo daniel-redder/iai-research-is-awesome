@@ -1,0 +1,39 @@
+name: CI/CD Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: uv sync
+
+      - name: Run Unit Tests
+        run: uv run pytest tests/
+
+      - name: Generate Toy Data
+        run: uv run python tests/generate_toy_data.py
+
+      - name: Build Interactive Graph
+        run: uv run python src/graph_builder.py
+
+      - name: Build Documentation (Strict Mode)
+        # --strict treats warnings (like broken links or missing iframes) as errors and fails the build
+        run: uv run mkdocs build --strict
