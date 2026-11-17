@@ -5,6 +5,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
     <title>IAI Research Explorer</title>
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
@@ -56,7 +57,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         #header-info a { color: #ff4444; text-decoration: underline; font-weight: bold; margin-left: 15px; }
         .uga-author-red { color: #ff0000; font-weight: bold; }
         
-        #header-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        #header-controls { display: flex; gap: 3px; align-items: center; flex-wrap: wrap; }
         button {
             width: 148px;
             min-height: 36px;
@@ -98,6 +99,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         .search-item { padding: 8px; border-bottom: 1px solid #333; cursor: pointer; }
         .search-item:hover { background: #ff0000; color: #000; }
         .search-hint { position: absolute; bottom: 20px; left: 20px; background: var(--g-hint-bg); border: 1px solid var(--g-border); color: var(--g-hint-text); padding: 5px 10px; font-size: 12px; z-index: 10; pointer-events: none;}
+        @media (max-width: 760px) {
+            body, html { min-height: 100%; }
+            #header-bar { min-height: 48px; height: auto; max-height: 56px; overflow: hidden; padding: 6px; align-items: flex-start; }
+            #header-info { display: none; }
+            #header-controls { width: 100%; gap: 6px; }
+            #header-controls button { width: auto; min-width: 34px; flex: 1 1 14%; min-height: 34px; padding: 4px 2px; font-size: 8.5px; line-height: 1.05; }
+            #header-controls #btn-theme, #header-controls #btn-settings, #header-controls #btn-fullscreen { flex: 0 1 auto; }
+            #settings-panel, #search-modal { top: 52px; left: 8px; right: 8px; width: auto; max-height: calc(100vh - 60px); overflow-y: auto; }
+            #custom-tooltip { max-width: calc(100vw - 24px); }
+            .search-hint { display: none; }
+        }
+        @media (max-width: 420px) {
+            #header-controls button { flex-basis: 28%; }
+            #header-controls #btn-reset, #header-controls #btn-fullscreen { display: none; }
+        }
+        @media (max-width: 340px) {
+            #header-controls button { flex-basis: 14%; min-width: 30px; font-size: 8px; }
+            #header-controls #btn-reset { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -105,10 +125,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div id="header-info"><i>Select a node or use Ctrl+F to search the IAI database...</i></div>
         
         <div id="header-controls">
-            <button id="btn-paper">Paper Citations</button>
-            <button id="btn-cluster">Cluster Regions</button>
-            <button id="btn-cluster-rep" class="secondary">Repulsion: Medium</button>
-            <button id="btn-author">Co-Authorships</button>
+            <button id="btn-paper">Citations</button>
+            <button id="btn-cluster">Clusters</button>
+            <button id="btn-labs">Labs</button>
+            <button id="btn-author">Authors</button>
             <button id="btn-reset" style="display:none;">Reset View</button>
             <div style="width: 1px; height: 30px; background: #555; margin: 0 5px;"></div>
             <button id="btn-theme" class="secondary">☾ Dark</button>
@@ -120,12 +140,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <div id="settings-panel">
         <h3 style="margin:0 0 10px 0; font-size:14px; color:#ff0000;">Graph Physics</h3>
         <div class="setting-row">
-            <label>Node Gravity (<span id="val-gravity"></span>)</label>
-            <input type="range" id="inp-gravity" min="-8000" max="-500" step="100">
+            <label><input type="checkbox" id="inp-enable-physics"> Enable physics</label>
         </div>
         <div class="setting-row">
-            <label>Cluster Repulsion Weight (<span id="val-cluster"></span>)</label>
-            <input type="range" id="inp-cluster" min="-15000" max="-2000" step="500">
+            <label>Node Gravity (<span id="val-gravity"></span>)</label>
+            <input type="range" id="inp-gravity" min="-8000" max="-500" step="100">
         </div>
         <div class="setting-row">
             <label>Spring Length (<span id="val-spring"></span>)</label>
@@ -149,47 +168,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         let network = null; let currentMode = 'paper';
         let hasInitialFit = false;
         const clusterColors = ["#ff0000", "#1a73e8", "#fbbc04", "#34a853", "#8e24aa", "#ff6d00"];
-        let clusterMap = {}; let colorIndex = 0;
+        let clusterMap = {}; let labMap = {}; let colorIndex = 0; let labColorIndex = 0;
 
         // PHYSICS PARAMS
         let currentGravity = -3000;
         let currentSpring = 150;
-        let currentClusterRep = -8000; // New independent repulsion weight for clusters
-        const clusterRepPresets = [
-            { label: 'Mild', value: -5000 },
-            { label: 'Medium', value: -8000 },
-            { label: 'Strong', value: -12000 }
-        ];
-        let clusterRepIndex = 1;
+        let physicsEnabled = localStorage.getItem('iai_graph_physics_enabled') === 'true';
+        document.getElementById('inp-enable-physics').checked = physicsEnabled;
         
         if (localStorage.getItem('iai_graph_gravity')) currentGravity = parseInt(localStorage.getItem('iai_graph_gravity'));
         if (localStorage.getItem('iai_graph_spring')) currentSpring = parseInt(localStorage.getItem('iai_graph_spring'));
-        if (localStorage.getItem('iai_graph_cluster')) currentClusterRep = parseInt(localStorage.getItem('iai_graph_cluster'));
         
         document.getElementById('inp-gravity').value = currentGravity;
         document.getElementById('inp-spring').value = currentSpring;
-        document.getElementById('inp-cluster').value = currentClusterRep;
         
         document.getElementById('val-gravity').innerText = currentGravity;
         document.getElementById('val-spring').innerText = currentSpring;
-        document.getElementById('val-cluster').innerText = currentClusterRep;
-
-        const presetMatch = clusterRepPresets.findIndex((p) => p.value === currentClusterRep);
-        if (presetMatch >= 0) clusterRepIndex = presetMatch;
-        document.getElementById('btn-cluster-rep').innerText = `Repulsion: ${clusterRepPresets[clusterRepIndex].label}`;
 
         document.getElementById('inp-gravity').oninput = (e) => { currentGravity = parseInt(e.target.value); document.getElementById('val-gravity').innerText = currentGravity; if(network) applyPhysics(); };
         document.getElementById('inp-spring').oninput = (e) => { currentSpring = parseInt(e.target.value); document.getElementById('val-spring').innerText = currentSpring; if(network) applyPhysics(); };
-        document.getElementById('inp-cluster').oninput = (e) => { currentClusterRep = parseInt(e.target.value); document.getElementById('val-cluster').innerText = currentClusterRep; if(network) applyPhysics(); };
-
-        document.getElementById('btn-cluster-rep').onclick = () => {
-            clusterRepIndex = (clusterRepIndex + 1) % clusterRepPresets.length;
-            currentClusterRep = clusterRepPresets[clusterRepIndex].value;
-            document.getElementById('inp-cluster').value = currentClusterRep;
-            document.getElementById('val-cluster').innerText = currentClusterRep;
-            document.getElementById('btn-cluster-rep').innerText = `Repulsion: ${clusterRepPresets[clusterRepIndex].label}`;
-            if (network) applyPhysics();
-        };
 
         document.getElementById('btn-settings').onclick = () => {
             const p = document.getElementById('settings-panel');
@@ -198,7 +195,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         document.getElementById('btn-save-settings').onclick = () => {
             localStorage.setItem('iai_graph_gravity', currentGravity);
             localStorage.setItem('iai_graph_spring', currentSpring);
-            localStorage.setItem('iai_graph_cluster', currentClusterRep);
+            localStorage.setItem('iai_graph_physics_enabled', physicsEnabled);
             document.getElementById('settings-panel').style.display = 'none';
         };
 
@@ -224,13 +221,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         };
 
         function applyPhysics() {
-            // avoidOverlap: 1 pushes nodes physically apart so labels are readable
-            let activeGravity = currentMode === 'cluster' ? currentClusterRep : currentGravity;
             network.setOptions({
-                physics: { 
-                    barnesHut: { gravitationalConstant: activeGravity, springLength: currentSpring, avoidOverlap: 1 },
-                    solver: 'barnesHut'
-                }
+                physics: physicsEnabled ? {
+                    barnesHut: { gravitationalConstant: currentGravity, springLength: currentSpring, avoidOverlap: 1 },
+                    solver: 'barnesHut',
+                    enabled: true
+                } : { enabled: false }
             });
         }
 
@@ -286,6 +282,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                         edgesToKeep.push({ from: group[i], to: group[i+1], type: 'gravity', hidden: true, physics: true, length: 15 });
                     }
                 }
+            } else if (currentMode === 'labs') {
+                let labGroups = {};
+                nodesToKeep.forEach(n => {
+                    const labName = n.uga_lab || (n.uga_authors && n.uga_authors.length ? n.uga_authors.map(id => {
+                        const author = allNodes.find(a => a.id === id);
+                        return author ? author.label : id;
+                    }).join(', ') : 'External / Unaffiliated');
+                    n.lab_cluster = labName;
+                    if (!labMap[labName]) {
+                        labMap[labName] = clusterColors[labColorIndex % clusterColors.length];
+                        labColorIndex++;
+                    }
+                    if (!labGroups[labName]) labGroups[labName] = [];
+                    labGroups[labName].push(n.id);
+                });
+                for (let labName in labGroups) {
+                    const group = labGroups[labName];
+                    for (let i = 0; i < group.length - 1; i++) {
+                        edgesToKeep.push({ from: group[i], to: group[i+1], type: 'gravity', hidden: true, physics: true, length: 15 });
+                    }
+                }
             }
 
             if (filteredNodeIds) {
@@ -331,21 +348,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 // Styling Overrides
                 if (currentMode === 'paper') {
                     nodeData.color = { background: '#ff0000', border: '#aa0000' };
-                    nodeData.font = { color: '#ffffff' };
+                    const labelColor = document.body.classList.contains('graph-dark') ? '#ffffff' : '#000000';
+                    const labelBackground = document.body.classList.contains('graph-dark') ? '#1f2430' : '#ffffff';
+                    nodeData.font = { color: labelColor, background: labelBackground, strokeWidth: 2, strokeColor: labelBackground };
                 } else if (currentMode === 'cluster' && nodeData.cluster_name) {
                     nodeData.color = { background: clusterMap[nodeData.cluster_name], border: '#ffffff' };
-                    nodeData.font = { color: '#ffffff' };
+                    const labelColor = document.body.classList.contains('graph-dark') ? '#ffffff' : '#000000';
+                    const labelBackground = document.body.classList.contains('graph-dark') ? '#1f2430' : '#ffffff';
+                    nodeData.font = { color: labelColor, background: labelBackground, strokeWidth: 2, strokeColor: labelBackground };
+                } else if (currentMode === 'labs' && nodeData.lab_cluster) {
+                    nodeData.color = { background: labMap[nodeData.lab_cluster], border: '#ffffff' };
+                    const labelColor = document.body.classList.contains('graph-dark') ? '#ffffff' : '#000000';
+                    const labelBackground = document.body.classList.contains('graph-dark') ? '#1f2430' : '#ffffff';
+                    nodeData.font = { color: labelColor, background: labelBackground, strokeWidth: 2, strokeColor: labelBackground };
                 } else if (currentMode === 'author') {
                     if (nodeData.group === 'paper') {
-                        // Semi-transparent styling for injected papers
-                        nodeData.color = { background: 'rgba(255, 0, 0, 0.2)', border: 'rgba(255, 0, 0, 0.4)' };
-                        nodeData.font = { color: 'rgba(255,255,255,0.6)' };
+                        nodeData.color = { background: '#ff0000', border: '#aa0000' };
+                        const labelColor = document.body.classList.contains('graph-dark') ? '#ffffff' : '#000000';
+                        const labelBackground = document.body.classList.contains('graph-dark') ? '#1f2430' : '#ffffff';
+                        nodeData.font = { color: labelColor, background: labelBackground, strokeWidth: 2, strokeColor: labelBackground };
                         nodeData.shape = 'box';
                     } else {
-                        // Standard Author Styling
                         if (nodeData.is_uga) nodeData.color = { background: '#ff0000', border: '#aa0000' };
                         else nodeData.color = { background: '#555555', border: '#333333' };
-                        nodeData.font = { color: '#ffffff' };
+                        const labelColor = document.body.classList.contains('graph-dark') ? '#ffffff' : '#000000';
+                        const labelBackground = document.body.classList.contains('graph-dark') ? '#1f2430' : '#ffffff';
+                        nodeData.font = { color: labelColor, background: labelBackground, strokeWidth: 2, strokeColor: labelBackground };
                     }
                 }
 
@@ -362,6 +390,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 if (e.type === 'authored') {
                     edgeData.color = { color: 'rgba(255, 0, 0, 0.3)' };
                     edgeData.dashes = true;
+                } else if (!document.body.classList.contains('graph-dark')) {
+                    edgeData.color = { color: '#111111', opacity: 1 };
                 }
                 return edgeData;
             });
@@ -370,12 +400,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             const options = {
                 nodes: { shape: 'dot', font: { size: 14, face: 'monospace' }, shadow: true },
                 edges: { width: 1.5, color: { inherit: 'both' }, smooth: { type: 'continuous' } },
-                interaction: { hover: true }
+                interaction: { hover: true, dragNodes: true, dragView: true, zoomView: true },
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: currentGravity * 2,
+                        springLength: currentSpring,
+                        avoidOverlap: 2
+                    },
+                    solver: 'barnesHut',
+                    stabilization: { iterations: 300, fit: true }
+                }
             };
 
             if (network) network.destroy();
             network = new vis.Network(container, data, options);
-            applyPhysics();
+
+            if (!physicsEnabled) {
+                network.once('stabilizationIterationsDone', function() {
+                    network.setOptions({ physics: { enabled: false } });
+                    network.fit({ animation: false });
+                });
+            } else {
+                applyPhysics();
+            }
 
             network.once('stabilizationIterationsDone', function() {
                 if (!hasInitialFit) {
@@ -404,40 +452,40 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             });
 
             network.on("beforeDrawing", function(ctx) {
-                if (currentMode !== 'cluster') return;
+                if (currentMode !== 'cluster' && currentMode !== 'labs') return;
                 
-                let clusterPositions = {};
+                let regionPositions = {};
                 for (let nodeId in network.body.nodes) {
                     let node = network.body.nodes[nodeId];
-                    if (node.options.cluster_name) {
-                        if (!clusterPositions[node.options.cluster_name]) clusterPositions[node.options.cluster_name] = [];
-                        clusterPositions[node.options.cluster_name].push(node);
+                    const regionName = currentMode === 'cluster' ? node.options.cluster_name : node.options.lab_cluster;
+                    if (regionName) {
+                        if (!regionPositions[regionName]) regionPositions[regionName] = [];
+                        regionPositions[regionName].push(node);
                     }
                 }
 
-                for (let cName in clusterPositions) {
-                    let nodes = clusterPositions[cName];
+                for (let regionName in regionPositions) {
+                    let nodes = regionPositions[regionName];
                     if (nodes.length === 0) continue;
-                    
                     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
                     nodes.forEach(n => {
                         minX = Math.min(minX, n.x); minY = Math.min(minY, n.y);
                         maxX = Math.max(maxX, n.x); maxY = Math.max(maxY, n.y);
                     });
-                    
                     let centerX = (minX + maxX) / 2;
                     let centerY = (minY + maxY) / 2;
                     let radius = Math.max(maxX - minX, maxY - minY) / 2 + 100;
+                    const regionColor = currentMode === 'cluster' ? clusterMap[regionName] : labMap[regionName];
 
-                    ctx.fillStyle = clusterMap[cName] + '22';
+                    ctx.fillStyle = regionColor + '22';
                     ctx.beginPath();
                     ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
                     ctx.fill();
 
-                    ctx.fillStyle = "rgba(255,255,255,0.7)";
+                    ctx.fillStyle = document.body.classList.contains('graph-dark') ? '#ffffff' : '#000000';
                     ctx.font = "bold 20px monospace";
                     ctx.textAlign = "center";
-                    ctx.fillText(cName, centerX, minY - 60);
+                    ctx.fillText(regionName, centerX, minY - 60);
                 }
             });
 
@@ -520,8 +568,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         document.getElementById('btn-paper').onclick = () => { currentMode = 'paper'; renderGraph(); };
         document.getElementById('btn-cluster').onclick = () => { currentMode = 'cluster'; renderGraph(); };
+        document.getElementById('btn-labs').onclick = () => { currentMode = 'labs'; renderGraph(); };
         document.getElementById('btn-author').onclick = () => { currentMode = 'author'; renderGraph(); };
         document.getElementById('btn-reset').onclick = () => { renderGraph(); document.getElementById('header-info').innerHTML = "<i>Select a node or use Ctrl+F to search the IAI database...</i>"; };
+
+        window.addEventListener('resize', () => {
+            if (network) {
+                network.setSize('100%', '100%');
+                network.fit({ animation: false });
+            }
+        });
     </script>
 </body>
 </html>
@@ -546,18 +602,21 @@ def build_interactive_graph():
             "url": p.get("url"),
             "uga_lab": p.get("uga_lab"),
             "uga_authors": p.get("uga_authors", []),
-            "authors_raw": p.get("authors", [])
+            "authors_raw": p.get("authors", []),
+            "abstract": p.get("abstract", {}),
+            "venue": p.get("venue", "Unknown"),
+            "publication_date": p.get("publication_date")
         })
         
         for ref in p.get("referenced_works", []):
             edges.append({"from": p["id"], "to": ref, "type": "cited"})
 
         auths = p.get("authors", [])
-        uga_auth_ids = p.get("uga_authors", [])
+        uga_auth_ids = p.get("uga_authors", []);
         
         for a in auths:
             # NEW: Log authored edges so we can display papers in Author mode
-            edges.append({"from": a["id"], "to": p["id"], "type": "authored"})
+            edges.append({"from": a["id"], "to": p["id"], "type": "authored"});
             
             if a["id"] not in author_nodes:
                 author_nodes[a["id"]] = {
@@ -569,19 +628,19 @@ def build_interactive_graph():
         
         for i in range(len(auths)):
             for j in range(i+1, len(auths)):
-                pair = tuple(sorted([auths[i]["id"], auths[j]["id"]]))
+                pair = tuple(sorted([auths[i]["id"], auths[j]["id"]]));
                 if pair not in coauthors:
-                    coauthors.add(pair)
-                    edges.append({"from": pair[0], "to": pair[1], "type": "coauthor"})
+                    coauthors.add(pair);
+                    edges.append({"from": pair[0], "to": pair[1], "type": "coauthor"});
 
-    nodes.extend(list(author_nodes.values()))
+    nodes.extend(list(author_nodes.values()));
 
-    os.makedirs("docs", exist_ok=True)
+    os.makedirs("docs", exist_ok=True);
     with open("docs/graph_data.json", "w") as f:
-        json.dump({"nodes": nodes, "edges": edges}, f)
+        json.dump({"nodes": nodes, "edges": edges}, f);
     with open("docs/graph_app.html", "w") as f:
-        f.write(HTML_TEMPLATE)
-    print("Graph app updated for minimal UI, bipartite author injections, and dynamic node collision.")
+        f.write(HTML_TEMPLATE);
+    print("Graph app updated for minimal UI, bipartite author injections, and dynamic node collision.");
 
 if __name__ == "__main__":
-    build_interactive_graph()
+    build_interactive_graph();

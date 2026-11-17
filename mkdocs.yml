@@ -1,14 +1,13 @@
 site_name: IAI@UGA Research is Awesome!
 theme:
   name: terminal
-  palette:
-    primary: red
-    accent: red
+  palette: red_drum
 plugins: [] # Disables native MkDocs search
 nav:
-  - graph: index.md
+  - graph: vis.md
   - search: search.md
 extra_css:
   - stylesheets/custom.css
 extra_javascript:
   - javascripts/theme-toggle.js
+  - javascripts/dashboard.js

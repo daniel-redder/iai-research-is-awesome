@@ -1,6 +1,15 @@
 # Database Search
 
-<input type="text" id="db-search" placeholder="Type to filter publications..." style="width: 100%; padding: 12px; margin-bottom: 20px; font-size: 16px; border: 1px solid var(--primary-color, #ff0000); background: #111; color: #fff; border-radius: 4px;">
+<script>
+(function () {
+  var saved = localStorage.getItem('uga-theme');
+  var dark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.style.backgroundColor = dark ? '#1f2430' : '#fffdf8';
+  document.body.classList.add(dark ? 'uga-theme-dark' : 'uga-theme-light');
+})();
+</script>
+
+<input type="text" id="db-search" placeholder="Type to filter publications..." style="width: 100%; padding: 12px; margin-bottom: 20px; font-size: 16px; border: 1px solid var(--primary-color, #ff0000); background: var(--code-bg-color, #111); color: var(--font-color, #fff); border-radius: 4px;">
 
 <div style="overflow-x:auto;">
   <table id="pub-table" style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left;">
@@ -19,8 +28,21 @@
 </div>
 
 <script>
-fetch('graph_data.json')
-  .then(response => response.json())
+async function loadSearchData() {
+  const candidates = [
+    new URL('../graph_data.json', window.location.href),
+    new URL('graph_data.json', window.location.href)
+  ];
+  for (const url of candidates) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return response.json();
+    } catch (error) {}
+  }
+  throw new Error('Database could not be loaded');
+}
+
+loadSearchData()
   .then(data => {
     const papers = data.nodes.filter(n => n.group === 'paper');
     const tbody = document.getElementById('pub-tbody');
@@ -49,7 +71,7 @@ fetch('graph_data.json')
             
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="padding: 10px; border: 1px solid #444;"><a href="${p.url}" target="_blank" style="color:#fff; text-decoration:underline;">${p.label}</a></td>
+                <td style="padding: 10px; border: 1px solid #444;"><a href="${p.url}" target="_blank" style="color:var(--primary-color, #ff0000); text-decoration:underline; opacity:1;">${p.label}</a></td>
                 <td style="padding: 10px; border: 1px solid #444;">${authorStr}</td>
                 <td style="padding: 10px; border: 1px solid #444;">${labStr}</td>
                 <td style="padding: 10px; border: 1px solid #444;">${clusterStr}</td>
