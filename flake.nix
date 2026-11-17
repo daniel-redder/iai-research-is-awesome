@@ -1,35 +1,29 @@
 {
-  description = "IAI Research Pipeline Development Environment with uv";
+  description = "IAI Research Pipeline Environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = nixpkgs.legacyPackages.${system};
-      in
-      {
-        devShells.default = pkgs.mkShell {
-          buildInputs = [
-            pkgs.python312
-            pkgs.uv
-            pkgs.git
-          ];
+  outputs = { self, nixpkgs }:
+    let
+      system = "x86_64-linux"; # Or your specific architecture
+      pkgs = nixpkgs.legacyPackages.${system};
+    in
+    {
+      devShells.${system}.default = pkgs.mkShell {
+        # 1. Add the missing C++ and Zlib libraries here
+        buildInputs = with pkgs; [
+          python312
+          uv
+          stdenv.cc.cc.lib
+          zlib
+        ];
 
-          shellHook = ''
-            echo "Entering IAI Research Pipeline Nix shell"
-            echo "Python $(python --version)"
-            echo "uv $(uv --version)"
-            
-            # Natively sync dependencies and create a virtualenv
-            if [ -f pyproject.toml ]; then
-              uv sync
-            fi
-          '';
-        };
-      }
-    );
+        # 2. Tell the pre-compiled Python wheels where to find them
+        shellHook = ''
+          export LD_LIBRARY_PATH=${pkgs.stdenv.cc.cc.lib}/lib:${pkgs.zlib}/lib:$LD_LIBRARY_PATH
+        '';
+      };
+    };
 }

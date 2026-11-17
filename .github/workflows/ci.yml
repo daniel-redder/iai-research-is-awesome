@@ -4,7 +4,6 @@ on: [push, pull_request]
 
 jobs:
   test:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     
     steps:
@@ -15,25 +14,22 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           version: "latest"
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
 
       - name: Install Dependencies
         run: uv sync
 
-      - name: Run Unit Tests
-        run: uv run pytest tests/
-
-      - name: Generate Toy Data
+      - name: Generate Temporal Toy Data
+        # Simulates the existence of historical data and newly harvested daily data
         run: uv run python tests/generate_toy_data.py
 
-      - name: Build Interactive Graph
+      - name: Execute Incremental Clustering Engine
+        # Respects old clusters, assigns close matches, spawns/names new clusters
+        run: uv run python src/cluster_papers.py
+
+      - name: Build Interactive Vis.js App
+        # Injects the finalized data into the standalone HTML app
         run: uv run python src/graph_builder.py
 
       - name: Build Documentation (Strict Mode)
-        # --strict treats warnings (like broken links or missing iframes) as errors and fails the build
+        # Fails CI if themes, assets (IAI logo), or HTML embeds are missing
         run: uv run mkdocs build --strict

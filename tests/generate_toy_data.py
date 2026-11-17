@@ -1,54 +1,64 @@
 import json
 import os
 
-toy_papers = [
+# "Historical" dataset
+old_papers = [
     {
-        "id": "W1", "title": "On Computable Numbers (Turing Machine)",
+        "id": "W1", "title": "On Computable Numbers and the Turing Machine",
         "authors": [{"id": "A1", "name": "Alan Turing"}],
+        "uga_authors": [], "uga_lab": None, "url": "https://doi.org/10.123/1",
+        "referenced_works": [], "cluster_name": "Foundational Computing"
+    },
+    {
+        "id": "W2", "title": "First Draft of a Report on the EDVAC Architecture",
+        "authors": [{"id": "A3", "name": "John von Neumann"}],
+        "uga_authors": [], "uga_lab": None, "url": "https://doi.org/10.123/2",
+        "referenced_works": ["W1"], "cluster_name": "Foundational Computing"
+    }
+]
+
+# "New" dataset with multiple IAI domains and co-authors
+new_papers = [
+    # NLP Domain
+    {
+        "id": "W3", "title": "Attention Is All You Need for Transformer Networks",
+        "authors": [{"id": "A8", "name": "Ashish Vaswani"}, {"id": "U1", "name": "Dr. Sarah Miller"}], 
+        "uga_authors": ["U1"], "uga_lab": "IAI Natural Language Group", "url": "https://arxiv.org/abs/123",
         "referenced_works": []
     },
     {
-        "id": "W2", "title": "Computing Machinery and Intelligence",
-        "authors": [{"id": "A1", "name": "Alan Turing"}],
-        "referenced_works": ["W1"]
+        "id": "W4", "title": "BERT: Deep Bidirectional Transformers for Language",
+        "authors": [{"id": "A9", "name": "Jacob Devlin"}, {"id": "U1", "name": "Dr. Sarah Miller"}], 
+        "uga_authors": ["U1"], "uga_lab": "IAI Natural Language Group", "url": "https://arxiv.org/abs/124",
+        "referenced_works": ["W3"]
+    },
+    # Robotics Domain
+    {
+        "id": "W5", "title": "Sim-to-Real Transfer in Bipedal Locomotion",
+        "authors": [{"id": "U2", "name": "Dr. Marcus Vance"}, {"id": "U3", "name": "Elena Rostova"}],
+        "uga_authors": ["U2", "U3"], "uga_lab": "UGA Robotics Dynamics Lab", "url": "https://doi.org/10.123/5",
+        "referenced_works": []
     },
     {
-        "id": "W3", "title": "A Logical Calculus of Nervous Activity",
-        "authors": [{"id": "A2", "name": "Warren McCulloch"}, {"id": "A3", "name": "Walter Pitts"}],
-        "referenced_works": ["W1"]
-    },
-    {
-        "id": "W4", "title": "The Perceptron: A Probabilistic Model",
-        "authors": [{"id": "A4", "name": "Frank Rosenblatt"}],
-        "referenced_works": ["W3", "W1"]
-    },
-    {
-        "id": "W5", "title": "Learning by Back-Propagating Errors",
-        "authors": [{"id": "A5", "name": "Geoffrey Hinton"}, {"id": "A6", "name": "David Rumelhart"}],
-        "referenced_works": ["W4"]
-    },
-    {
-        "id": "W6", "title": "Deep Learning for Vision",
-        "authors": [{"id": "A5", "name": "Geoffrey Hinton"}, {"id": "A7", "name": "Yann LeCun"}],
-        "referenced_works": ["W5", "W4"]
-    },
-    {
-        "id": "W7", "title": "Attention Is All You Need",
-        "authors": [{"id": "A8", "name": "Ashish Vaswani"}],
+        "id": "W6", "title": "Reinforcement Learning for Dexterous Manipulation",
+        "authors": [{"id": "U2", "name": "Dr. Marcus Vance"}],
+        "uga_authors": ["U2"], "uga_lab": "UGA Robotics Dynamics Lab", "url": "https://doi.org/10.123/6",
         "referenced_works": ["W5"]
     },
+    # Bio-AI Domain
     {
-        "id": "W8", "title": "BERT: Deep Bidirectional Transformers",
-        "authors": [{"id": "A9", "name": "Jacob Devlin"}],
-        "referenced_works": ["W7", "W5"]
+        "id": "W7", "title": "AlphaFold: Highly Accurate Protein Structure Prediction",
+        "authors": [{"id": "A10", "name": "John Jumper"}, {"id": "U4", "name": "Dr. Li Wei"}],
+        "uga_authors": ["U4"], "uga_lab": "IAI Computational Biology Lab", "url": "https://doi.org/10.123/7",
+        "referenced_works": ["W1"]
     }
 ]
 
 def main():
     os.makedirs("data", exist_ok=True)
-    with open("data/papers_raw.json", "w") as f:
-        json.dump(toy_papers, f, indent=2)
-    print("Rich toy data generated at data/papers_raw.json!")
+    with open("data/papers_old.json", "w") as f: json.dump(old_papers, f, indent=2)
+    with open("data/papers_new.json", "w") as f: json.dump(new_papers, f, indent=2)
+    print("Extended domain toy data generated.")
 
 if __name__ == "__main__":
     main()

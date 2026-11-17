@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "mkdocs>=1.5.3",
+    "mkdocs-terminal>=4.8.0",
     "networkx>=3.1",
     "numpy>=1.26.0",
     "pandas>=2.1.1",

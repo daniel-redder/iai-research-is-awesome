@@ -1,2 +1,5 @@
 site/**
 lib/**
+**/papers_new.json
+**/papers_old.json
+**/graph_data.json

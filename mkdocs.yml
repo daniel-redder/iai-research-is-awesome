@@ -1,20 +1,14 @@
-site_name: IAI Research Pipeline
-site_description: Automated Research Discovery for the Institute for Artificial Intelligence
-copyright: "Copyright &copy; 2026 Daniel Redder"
-
+site_name: IAI@UGA Research is Awesome!
 theme:
-  name: material
-  logo: assets/iai_logo.png
-  # UGA Official Colors mapped to Material theme
+  name: terminal
   palette:
-    primary: custom
-    accent: custom
-
+    primary: red
+    accent: red
+plugins: [] # Disables native MkDocs search
 nav:
-  - Home: index.md
-  - API Reference: api.md
-  - Graph: vis.md
-
-
+  - graph: index.md
+  - search: search.md
 extra_css:
-  - stylesheets/extra.css
+  - stylesheets/custom.css
+extra_javascript:
+  - javascripts/theme-toggle.js
