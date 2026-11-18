@@ -892,7 +892,7 @@ def build_interactive_graph():
     if not os.path.exists("data/papers_raw.json"):
         return
 
-    with open("data/papers_raw.json", "r") as f:
+    with open("data/papers_raw.json") as f:
         papers = json.load(f)
     if not isinstance(papers, list):
         papers = []
@@ -900,7 +900,7 @@ def build_interactive_graph():
     roster_by_name = {}
     roster_path = "data/iai_roster.json"
     if os.path.exists(roster_path):
-        with open(roster_path, "r") as f:
+        with open(roster_path) as f:
             roster = json.load(f)
         if not isinstance(roster, list):
             roster = []

@@ -48,3 +48,7 @@ exclude = ["site", ".venv"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# This module embeds HTML and JavaScript whose line lengths are not Python formatting issues.
+"src/graph_builder.py" = ["E501"]
