@@ -153978,7 +153978,10 @@
     },
     "cluster_name": "AI for Cyber & Societal Security.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5008726578"
+    ]
   },
   {
     "id": "https://openalex.org/W4386158794",
@@ -154399,7 +154402,10 @@
     "uga_labs": [
       "The Evolutionary Computation and Machine Learning Laboratory"
     ],
-    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory"
+    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5035370466"
+    ]
   },
   {
     "id": "https://openalex.org/W4386159835",
@@ -154917,7 +154923,10 @@
     "uga_labs": [
       "The Evolutionary Computation and Machine Learning Laboratory"
     ],
-    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory"
+    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5035370466"
+    ]
   },
   {
     "id": "https://openalex.org/W4386159872",
@@ -155474,7 +155483,10 @@
     "uga_labs": [
       "The Evolutionary Computation and Machine Learning Laboratory"
     ],
-    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory"
+    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5035370466"
+    ]
   },
   {
     "id": "https://openalex.org/W4386159885",
@@ -156097,7 +156109,10 @@
     "uga_labs": [
       "The Evolutionary Computation and Machine Learning Laboratory"
     ],
-    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory"
+    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5035370466"
+    ]
   },
   {
     "id": "https://openalex.org/W4311104001",
@@ -156632,7 +156647,10 @@
     },
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5039424213"
+    ]
   },
   {
     "id": "https://openalex.org/W4315630445",
@@ -157139,7 +157157,8 @@
     "uga_labs": [
       "Zhao Research Group"
     ],
-    "uga_lab": "Zhao Research Group"
+    "uga_lab": "Zhao Research Group",
+    "uga_authors": []
   },
   {
     "id": "https://openalex.org/W4393612316",
@@ -157251,7 +157270,10 @@
     "uga_labs": [
       "Zhao Research Group"
     ],
-    "uga_lab": "Zhao Research Group"
+    "uga_lab": "Zhao Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5006897488"
+    ]
   },
   {
     "id": "https://openalex.org/W4310950351",
@@ -157817,7 +157839,10 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4311147668",
@@ -157881,7 +157906,10 @@
     "abstract": null,
     "cluster_name": "Foundational AI.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5039424213"
+    ]
   },
   {
     "id": "https://openalex.org/W4311484962",
@@ -158337,7 +158365,10 @@
     },
     "cluster_name": "Foundational AI.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5062746868"
+    ]
   },
   {
     "id": "https://openalex.org/W4312256691",
@@ -158421,7 +158452,10 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4312318847",
@@ -158516,7 +158550,11 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100359839",
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4313310852",
@@ -159084,7 +159122,10 @@
     "uga_labs": [
       "Cox International Center"
     ],
-    "uga_lab": "Cox International Center"
+    "uga_lab": "Cox International Center",
+    "uga_authors": [
+      "https://openalex.org/A5107368669"
+    ]
   },
   {
     "id": "https://openalex.org/W4318185468",
@@ -159666,7 +159707,10 @@
     },
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4320024179",
@@ -160131,7 +160175,10 @@
     },
     "cluster_name": "Foundational AI.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100415736"
+    ]
   },
   {
     "id": "https://openalex.org/W4313429680",
@@ -160713,7 +160760,10 @@
     "uga_labs": [
       "Zhao Research Group"
     ],
-    "uga_lab": "Zhao Research Group"
+    "uga_lab": "Zhao Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5006897488"
+    ]
   },
   {
     "id": "https://openalex.org/W4312041779",
@@ -161244,7 +161294,10 @@
     "uga_labs": [
       "The Evolutionary Computation and Machine Learning Laboratory"
     ],
-    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory"
+    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5035370466"
+    ]
   },
   {
     "id": "https://openalex.org/W4312115300",
@@ -161786,7 +161839,10 @@
     "uga_labs": [
       "Zhao Research Group"
     ],
-    "uga_lab": "Zhao Research Group"
+    "uga_lab": "Zhao Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5006897488"
+    ]
   },
   {
     "id": "https://openalex.org/W4313291282",
@@ -162373,7 +162429,10 @@
     "uga_labs": [
       "The Virtual Experiences Laboratory"
     ],
-    "uga_lab": "The Virtual Experiences Laboratory"
+    "uga_lab": "The Virtual Experiences Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5026499095"
+    ]
   },
   {
     "id": "https://openalex.org/W4315621825",
@@ -162876,7 +162935,10 @@
     },
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4316363330",
@@ -163538,7 +163600,10 @@
     },
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4317556992",
@@ -163596,7 +163661,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4317557004",
@@ -163640,7 +163708,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4317557009",
@@ -163683,7 +163754,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4317557433",
@@ -163745,7 +163819,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4317557541",
@@ -163809,7 +163886,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4317558088",
@@ -163864,7 +163944,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4317607158",
@@ -163903,7 +163986,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4319300107",
@@ -164394,7 +164480,10 @@
     },
     "cluster_name": "Foundational AI.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4320004144",
@@ -164463,7 +164552,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4320008514",
@@ -164505,7 +164597,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4320008532",
@@ -164574,7 +164669,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4320008606",
@@ -164612,7 +164710,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4323240301",
@@ -164642,7 +164743,10 @@
     "abstract": null,
     "cluster_name": "Foundational AI.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4327521572",
@@ -165589,7 +165693,10 @@
     },
     "cluster_name": "AI for 3F.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100752569"
+    ]
   },
   {
     "id": "https://openalex.org/W4365395072",
@@ -166054,7 +166161,10 @@
     },
     "cluster_name": "AI for Cyber & Societal Security.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4365398162",
@@ -166430,7 +166540,10 @@
     },
     "cluster_name": "Foundational AI.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4366149334",
@@ -166863,7 +166976,10 @@
       "HeRo Lab",
       "The Heterogeneous Robotics Research Lab"
     ],
-    "uga_lab": "HeRo Lab, The Heterogeneous Robotics Research Lab"
+    "uga_lab": "HeRo Lab, The Heterogeneous Robotics Research Lab",
+    "uga_authors": [
+      "https://openalex.org/A5066995823"
+    ]
   },
   {
     "id": "https://openalex.org/W4367292822",
@@ -166883,7 +166999,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4379620657",
@@ -166905,7 +167024,10 @@
     "abstract": null,
     "cluster_name": "Foundational AI.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5008726578"
+    ]
   },
   {
     "id": "https://openalex.org/W4385360715",
@@ -167052,7 +167174,10 @@
     "uga_labs": [
       "Zhao Research Group"
     ],
-    "uga_lab": "Zhao Research Group"
+    "uga_lab": "Zhao Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5006897488"
+    ]
   },
   {
     "id": "https://openalex.org/W4385570462",
@@ -167257,7 +167382,10 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100647155"
+    ]
   },
   {
     "id": "https://openalex.org/W4385570692",
@@ -167659,7 +167787,10 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4385800084",
@@ -167721,7 +167852,10 @@
     "abstract": null,
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5054951387"
+    ]
   },
   {
     "id": "https://openalex.org/W4386815376",
@@ -167988,7 +168122,8 @@
     },
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": []
   },
   {
     "id": "https://openalex.org/W4386999422",
@@ -168390,7 +168525,10 @@
     "uga_labs": [
       "RAIL Lab"
     ],
-    "uga_lab": "RAIL Lab"
+    "uga_lab": "RAIL Lab",
+    "uga_authors": [
+      "https://openalex.org/A5064614206"
+    ]
   },
   {
     "id": "https://openalex.org/W4387272338",
@@ -169176,7 +169314,10 @@
     },
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100752569"
+    ]
   },
   {
     "id": "https://openalex.org/W4388743819",
@@ -169229,7 +169370,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4388982268",
@@ -169277,7 +169421,10 @@
     "uga_labs": [
       "The Virtual Experiences Laboratory"
     ],
-    "uga_lab": "The Virtual Experiences Laboratory"
+    "uga_lab": "The Virtual Experiences Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5026499095"
+    ]
   },
   {
     "id": "https://openalex.org/W4389038956",
@@ -169313,7 +169460,8 @@
     "uga_labs": [
       "RAIL Lab"
     ],
-    "uga_lab": "RAIL Lab"
+    "uga_lab": "RAIL Lab",
+    "uga_authors": []
   },
   {
     "id": "https://openalex.org/W4389138623",
@@ -169508,7 +169656,11 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100359839",
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4389752936",
@@ -169577,7 +169729,10 @@
     "uga_labs": [
       "Zhao Research Group"
     ],
-    "uga_lab": "Zhao Research Group"
+    "uga_lab": "Zhao Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5006897488"
+    ]
   },
   {
     "id": "https://openalex.org/W4391465151",
@@ -169679,7 +169834,11 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100359839",
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W7116364815",
@@ -169820,7 +169979,10 @@
     "uga_labs": [
       "The Small Satellite Research Laboratory"
     ],
-    "uga_lab": "The Small Satellite Research Laboratory"
+    "uga_lab": "The Small Satellite Research Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5120931942"
+    ]
   },
   {
     "id": "https://openalex.org/W4321504367",
@@ -170437,7 +170599,10 @@
     "uga_labs": [
       "The Computational Multi-Modal Communication Lab"
     ],
-    "uga_lab": "The Computational Multi-Modal Communication Lab"
+    "uga_lab": "The Computational Multi-Modal Communication Lab",
+    "uga_authors": [
+      "https://openalex.org/A5112752610"
+    ]
   },
   {
     "id": "https://openalex.org/W4321020673",
@@ -170904,7 +171069,10 @@
       "HeRo Lab",
       "The Heterogeneous Robotics Research Lab"
     ],
-    "uga_lab": "HeRo Lab, The Heterogeneous Robotics Research Lab"
+    "uga_lab": "HeRo Lab, The Heterogeneous Robotics Research Lab",
+    "uga_authors": [
+      "https://openalex.org/A5066995823"
+    ]
   },
   {
     "id": "https://openalex.org/W4317707966",
@@ -171866,7 +172034,10 @@
     },
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4317868880",
@@ -172590,7 +172761,10 @@
     },
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4320513537",
@@ -173206,7 +173380,10 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4319658831",
@@ -173740,7 +173917,10 @@
     "uga_labs": [
       "The Computational Multi-Modal Communication Lab"
     ],
-    "uga_lab": "The Computational Multi-Modal Communication Lab"
+    "uga_lab": "The Computational Multi-Modal Communication Lab",
+    "uga_authors": [
+      "https://openalex.org/A5112752610"
+    ]
   },
   {
     "id": "https://openalex.org/W4321648625",
@@ -174244,7 +174424,10 @@
     "uga_labs": [
       "The Evolutionary Computation and Machine Learning Laboratory"
     ],
-    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory"
+    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5035370466"
+    ]
   },
   {
     "id": "https://openalex.org/W4321378049",
@@ -174826,7 +175009,10 @@
     },
     "cluster_name": "Foundational AI.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100752569"
+    ]
   },
   {
     "id": "https://openalex.org/W4321434639",
@@ -175556,7 +175742,10 @@
     },
     "cluster_name": "AI in Education.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5126758517"
+    ]
   },
   {
     "id": "https://openalex.org/W4322716601",
@@ -176096,7 +176285,10 @@
     },
     "cluster_name": "AI for Cyber & Societal Security.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5100359839"
+    ]
   },
   {
     "id": "https://openalex.org/W4324140380",
@@ -176988,7 +177180,10 @@
     },
     "cluster_name": "AI and Future of Health & Work.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": [
+      "https://openalex.org/A5029018437"
+    ]
   },
   {
     "id": "https://openalex.org/W4383498382",
@@ -177712,7 +177907,10 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4366818296",
@@ -177973,7 +178171,10 @@
     "uga_labs": [
       "Skidaway Institute"
     ],
-    "uga_lab": "Skidaway Institute"
+    "uga_lab": "Skidaway Institute",
+    "uga_authors": [
+      "https://openalex.org/A5030894761"
+    ]
   },
   {
     "id": "https://openalex.org/W4323655958",
@@ -178029,7 +178230,10 @@
     "uga_labs": [
       "Cox International Center"
     ],
-    "uga_lab": "Cox International Center"
+    "uga_lab": "Cox International Center",
+    "uga_authors": [
+      "https://openalex.org/A5100447370"
+    ]
   },
   {
     "id": "https://openalex.org/W4381746952",
@@ -178569,7 +178773,10 @@
       "HeRo Lab",
       "The Heterogeneous Robotics Research Lab"
     ],
-    "uga_lab": "HeRo Lab, The Heterogeneous Robotics Research Lab"
+    "uga_lab": "HeRo Lab, The Heterogeneous Robotics Research Lab",
+    "uga_authors": [
+      "https://openalex.org/A5066995823"
+    ]
   },
   {
     "id": "https://openalex.org/W4324142429",
@@ -179100,7 +179307,10 @@
     "uga_labs": [
       "The Evolutionary Computation and Machine Learning Laboratory"
     ],
-    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory"
+    "uga_lab": "The Evolutionary Computation and Machine Learning Laboratory",
+    "uga_authors": [
+      "https://openalex.org/A5035370466"
+    ]
   },
   {
     "id": "https://openalex.org/W4324306025",
@@ -179693,7 +179903,10 @@
     "uga_labs": [
       "Pete Bettinger Research Group"
     ],
-    "uga_lab": "Pete Bettinger Research Group"
+    "uga_lab": "Pete Bettinger Research Group",
+    "uga_authors": [
+      "https://openalex.org/A5045879211"
+    ]
   },
   {
     "id": "https://openalex.org/W4353007316",
@@ -180434,7 +180647,10 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4328142089",
@@ -181021,7 +181237,8 @@
     },
     "cluster_name": "Foundational AI.",
     "uga_labs": [],
-    "uga_lab": ""
+    "uga_lab": "",
+    "uga_authors": []
   },
   {
     "id": "https://openalex.org/W4378710422",
@@ -181446,7 +181663,10 @@
     "uga_labs": [
       "Cox International Center"
     ],
-    "uga_lab": "Cox International Center"
+    "uga_lab": "Cox International Center",
+    "uga_authors": [
+      "https://openalex.org/A5100447372"
+    ]
   },
   {
     "id": "https://openalex.org/W4366601910",
@@ -182054,7 +182274,10 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4360610309",
@@ -182440,7 +182663,10 @@
     "uga_labs": [
       "The Hoarfrost Lab"
     ],
-    "uga_lab": "The Hoarfrost Lab"
+    "uga_lab": "The Hoarfrost Lab",
+    "uga_authors": [
+      "https://openalex.org/A5030673913"
+    ]
   },
   {
     "id": "https://openalex.org/W4360612437",
@@ -183415,7 +183641,10 @@
     "uga_labs": [
       "The Hoarfrost Lab"
     ],
-    "uga_lab": "The Hoarfrost Lab"
+    "uga_lab": "The Hoarfrost Lab",
+    "uga_authors": [
+      "https://openalex.org/A5030673913"
+    ]
   },
   {
     "id": "https://openalex.org/W4361267596",
@@ -184148,7 +184377,10 @@
     "uga_labs": [
       "UGA Bioimaging Research Center"
     ],
-    "uga_lab": "UGA Bioimaging Research Center"
+    "uga_lab": "UGA Bioimaging Research Center",
+    "uga_authors": [
+      "https://openalex.org/A5100647156"
+    ]
   },
   {
     "id": "https://openalex.org/W4379620277",
@@ -184631,6 +184863,9 @@
       "HeRo Lab",
       "The Heterogeneous Robotics Research Lab"
     ],
-    "uga_lab": "HeRo Lab, The Heterogeneous Robotics Research Lab"
+    "uga_lab": "HeRo Lab, The Heterogeneous Robotics Research Lab",
+    "uga_authors": [
+      "https://openalex.org/A5066995823"
+    ]
   }
 ]
