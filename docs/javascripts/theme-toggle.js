@@ -195,6 +195,7 @@
 
         var logo = document.querySelector("#mkdocs-terminal-site-name a");
         if (logo) {
+            logo.href = siteRootUrl.href;
             logo.textContent = "IAI@UGA Research is Awesome!";
         }
 
