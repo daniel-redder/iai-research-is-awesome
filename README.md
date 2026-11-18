@@ -6,10 +6,10 @@
 
 This repository runs automatically via GitHub Actions:
 1. **Harvester (`src/harvester.py`)**: Polls OpenAlex for paper metadata (titles, venues, citations, authors, dates).
-2. **Author Resolver (`src/author_resolver.py`)**: Deduplicates authors and tags them as Core, Affiliate, Student, or Uncertain.
+2. **Author Resolver (`src/author_resolver.py`)**: Deduplicates authors and tags them as Core, Affiliate, Student, or Uncertain affiliated co-authors.
 3. **Clusterer (`src/clusterer.py`)**: Uses TF-IDF and K-Means to cluster papers by textual similarity and generates dynamic cluster names.
 4. **Graph Builder (`src/graph_builder.py`)**: Formats the clustered data into a node/edge JSON graph.
-5. **Cosmograph Frontend (`docs/index.html`)**: Renders a high-performance webGL network graph on GitHub Pages.
+5. **Web UI (`docs/index.html`)**: Renders a high-performance webGL network graph on GitHub Pages.
 
 ## Setup Instructions
 
