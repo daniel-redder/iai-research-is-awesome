@@ -100,22 +100,20 @@
         .search-hint { position: absolute; bottom: 20px; left: 20px; background: var(--g-hint-bg); border: 1px solid var(--g-border); color: var(--g-hint-text); padding: 5px 10px; font-size: 12px; z-index: 10; pointer-events: none;}
         @media (max-width: 760px) {
             body, html { min-height: 100%; }
-            #header-bar { min-height: 48px; height: auto; max-height: 56px; overflow: hidden; padding: 6px; align-items: flex-start; }
+            #header-bar { min-height: 48px; height: auto; max-height: none; overflow: visible; padding: 6px; flex-direction: column; align-items: stretch; }
             #header-info { display: none; }
-            #header-controls { width: 100%; gap: 6px; }
-            #header-controls button { width: auto; min-width: 34px; flex: 1 1 14%; min-height: 34px; padding: 4px 2px; font-size: 8.5px; line-height: 1.05; }
-            #header-controls #btn-theme, #header-controls #btn-settings, #header-controls #btn-fullscreen { flex: 0 1 auto; }
+            #header-controls { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+            #header-controls button { width: 100%; min-width: 0; min-height: 36px; padding: 4px 2px; font-size: 9px; line-height: 1.05; }
+            #header-controls .graph-controls-divider { display: none; }
             #settings-panel, #search-modal { top: 52px; left: 8px; right: 8px; width: auto; max-height: calc(100vh - 60px); overflow-y: auto; }
             #custom-tooltip { max-width: calc(100vw - 24px); }
             .search-hint { display: none; }
         }
         @media (max-width: 420px) {
-            #header-controls button { flex-basis: 28%; }
-            #header-controls #btn-reset, #header-controls #btn-fullscreen { display: none; }
+            #header-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
         @media (max-width: 340px) {
-            #header-controls button { flex-basis: 14%; min-width: 30px; font-size: 8px; }
-            #header-controls #btn-reset { display: none; }
+            #header-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
     </style>
 </head>
@@ -129,7 +127,7 @@
             <button id="btn-labs">Labs</button>
             <button id="btn-author">Authors</button>
             <button id="btn-reset" style="display:none;">Reset View</button>
-            <div style="width: 1px; height: 30px; background: #555; margin: 0 5px;"></div>
+            <div class="graph-controls-divider" style="width: 1px; height: 30px; background: #555; margin: 0 5px;"></div>
             <button id="btn-theme" class="secondary">☾ Dark</button>
             <button id="btn-settings">⚙️ Physics</button>
             <button id="btn-fullscreen">⛶ Fullscreen</button>

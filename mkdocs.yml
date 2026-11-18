@@ -1,4 +1,5 @@
 site_name: IAI@UGA Research is Awesome!
+site_url: https://daniel-redder.github.io/iai-research-is-awesome/
 theme:
   name: terminal
   palette: red_drum

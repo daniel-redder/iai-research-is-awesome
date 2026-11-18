@@ -1,5 +1,9 @@
 (function () {
     var STORAGE_KEY = "uga-theme";
+    var themeScriptUrl = document.currentScript && document.currentScript.src
+        ? document.currentScript.src
+        : new URL("javascripts/theme-toggle.js", window.location.href).href;
+    var siteRootUrl = new URL("../", themeScriptUrl);
 
     function getSystemTheme() {
         return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -164,10 +168,8 @@
         select.innerHTML = '<option value="' + selectedYear + '">' + selectedYear + "</option>";
         refreshControls();
 
-        var siteHome = siteName.querySelector("a");
-        var siteRoot = siteHome ? siteHome.href : window.location.href;
         var dataUrls = [
-            new URL("graph_data.json", siteRoot),
+            new URL("graph_data.json", siteRootUrl),
             new URL("../graph_data.json", window.location.href),
             new URL("/graph_data.json", window.location.origin),
         ];
