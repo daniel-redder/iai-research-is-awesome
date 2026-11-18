@@ -373,7 +373,7 @@
         });
         const venueBody = document.getElementById('venue-table-body');
         if (venueBody) {
-            const venueRows = [...venueCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 25);
+            const venueRows = [...venueCounts.entries()].sort((a, b) => b[1] - a[1]);
             venueBody.innerHTML = venueRows.length
                 ? venueRows.map(([venue, count]) => {
                     const safeVenue = venue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

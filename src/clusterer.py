@@ -51,6 +51,33 @@ AGRICULTURE_TITLE_PATTERN = re.compile(
     r"plant (?:breeding|phenotyping|protein|disease|health|growth))\b",
     re.IGNORECASE,
 )
+EDUCATION_CATEGORY = "AI in Education."
+HEALTH_CATEGORY = "AI and Future of Health & Work."
+CYBER_CATEGORY = "AI for Cyber & Societal Security."
+
+EDUCATION_TITLE_PATTERN = re.compile(
+    r"\b(?:education|educational|teacher|teachers|teaching|classroom|student|students|"
+    r"pedagogy|curriculum|tutor(?:ing)?|school|schools|instruction|learning analytics|"
+    r"adaptive learning|STEM|GNSS accuracy approaches mapping-grade)\b",
+    re.IGNORECASE,
+)
+HEALTH_TITLE_PATTERN = re.compile(
+    r"\b(?:health|healthcare|medical|medicine|clinical|patient|patients|diagnostic|"
+    r"hospital|snoring|sleep apnea|human trait|human-computer|human computer|"
+    r"algorithmic advice|neuroinformatics|brain network|brain activity|radiolog\w*)\b",
+    re.IGNORECASE,
+)
+CYBER_TITLE_PATTERN = re.compile(
+    r"\b(?:cyber(?:security| defense| deception)?|cybersecurity|malware|intrusion|"
+    r"threat detection|adversarial|privacy|critical infrastructure)\b",
+    re.IGNORECASE,
+)
+FORESTRY_TITLE_PATTERN = re.compile(
+    r"\b(?:forest(?:ry|ed|s)?|timberland|GNSS|positional accuracy|nearby trees|"
+    r"trees in a forest|agriculture|agronomy|cotton|crop|crops|plant breeding|"
+    r"plant phenotyping|weed control|weed management|poultry|livestock)\b",
+    re.IGNORECASE,
+)
 
 
 def safe_text(value, max_len=MAX_TEXT_FIELD_LEN):
@@ -146,6 +173,35 @@ def generate_copilot_cluster_name(tfidf_matrix, vectorizer, cluster_indices):
     return FOUNDATIONAL_CATEGORY
 
 
+def detect_domain_category(paper):
+    """Use clear title evidence before noisy centroid/KMeans clustering."""
+    if not isinstance(paper, dict):
+        return None
+
+    title = safe_text(paper.get("title", ""))
+    abstract = abstract_to_text(paper.get("abstract", ""))
+    evidence = f"{title} {title} {abstract[:3000]}"
+
+    if FORESTRY_TITLE_PATTERN.search(title):
+        return AGRICULTURE_CATEGORY
+    if CYBER_TITLE_PATTERN.search(title):
+        return CYBER_CATEGORY
+    if EDUCATION_TITLE_PATTERN.search(title):
+        return EDUCATION_CATEGORY
+    if HEALTH_TITLE_PATTERN.search(title):
+        return HEALTH_CATEGORY
+
+    if FORESTRY_TITLE_PATTERN.search(evidence):
+        return AGRICULTURE_CATEGORY
+    if CYBER_TITLE_PATTERN.search(evidence):
+        return CYBER_CATEGORY
+    if EDUCATION_TITLE_PATTERN.search(evidence):
+        return EDUCATION_CATEGORY
+    if HEALTH_TITLE_PATTERN.search(evidence):
+        return HEALTH_CATEGORY
+    return None
+
+
 def run_clustering():
     old_path = "data/papers_old.json"
     new_path = "data/papers_new.json"
@@ -235,8 +291,9 @@ def run_clustering():
                 all_papers[g_idx]["cluster_name"] = new_cluster_name
 
     for paper in all_papers:
-        if is_agriculture_paper(paper):
-            paper["cluster_name"] = AGRICULTURE_CATEGORY
+        domain_category = detect_domain_category(paper)
+        if domain_category:
+            paper["cluster_name"] = domain_category
 
     with open("data/papers_raw.json", "w") as f:
         json.dump(all_papers, f, indent=2)

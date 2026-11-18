@@ -19,3 +19,23 @@ def test_agriculture_papers_are_detected(title):
 
 def test_non_agriculture_paper_is_not_detected():
     assert not is_agriculture_paper({"title": "Self-Evolving Code-with-Image Reasoning"})
+
+
+@pytest.mark.parametrize(
+    ("title", "expected"),
+    [
+        ("GNSS accuracy in forest conditions", "AI for 3F."),
+        ("The effects of nearby trees on GNSS receivers", "AI for 3F."),
+        ("Smartphone GNSS accuracy in forest conditions", "AI for 3F."),
+        (
+            "MEDQUA: A quantum adapter for medical vision-language models",
+            "AI and Future of Health & Work.",
+        ),
+        ("Attention feature fusion for snoring detection", "AI and Future of Health & Work."),
+        ("Adaptive tutoring with learning analytics", "AI in Education."),
+    ],
+)
+def test_explicit_domain_classification(title, expected):
+    from src.clusterer import detect_domain_category
+
+    assert detect_domain_category({"title": title, "abstract": None}) == expected

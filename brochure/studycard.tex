@@ -1,0 +1,292 @@
+\documentclass[8pt,letterpaper]{article}
+
+% ==============================================================================
+% MODE SWITCH: Set \toggletrue{draftmode} for drafting/reading individual pages,
+% or \togglefalse{draftmode} for full 8-up 1-sided printing imposition.
+% ==============================================================================
+\usepackage{etoolbox}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newtoggle{draftmode}
+\newcommand{\PQ}{P\!Q}
+\newcommand{\sigmapq}{\mathrm{PQ}}
+
+% ---> TOGGLE THIS LINE <---
+% \toggletrue{draftmode}   % UNCOMMENT for Drafting Mode (8 individual pages)
+\togglefalse{draftmode}  % UNCOMMENT for Imposed Print Mode (1 letter sheet)
+%
+% ==============================================================================
+% PACKAGES & SETUP
+% ==============================================================================
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{environ}
+\usepackage{tgpagella}
+\usepackage{adjustbox}
+
+% Page geometry conditionally configured based on mode
+\iftoggle{draftmode}{
+  % DRAFTING MODE: Single page size (2.75" x 4.25")
+  \usepackage[paperwidth=2.75in, paperheight=4.25in, margin=0.2in]{geometry}
+  \pagestyle{empty}
+}{
+  % PRINT MODE: Landscape Letter Sheet (11" x 8.5")
+  \usepackage[landscape, margin=0pt]{geometry}
+  \pagestyle{empty}
+}
+
+% Store each page as a named macro so both draft and print modes can render them
+\newcommand{\setzinepage}[2]{%
+  \expandafter\gdef\csname zinepage#1\endcsname{%
+    \ifnum#1=1
+    #2%
+    \else
+    \fitimposedpage{#2}%
+    \fi
+  }%
+}
+
+\newcommand{\fitimposedpage}[1]{%
+  \iftoggle{draftmode}{#1}{%
+    \begin{minipage}[t][3.75in][t]{2.35in}\raggedright #1
+    \end{minipage}%
+  }%
+}
+
+% Render one panel in the final imposed layout.
+\newcommand{\renderpanel}[4]{% #1: Page number, #2: Rotation angle, #3: xshift, #4: yshift
+  \node[
+    xshift=#3,
+    yshift=#4,
+    rotate=#2,
+    minimum width=2.75in,
+    minimum height=4.25in,
+    inner sep=0.18in,
+    align=center,
+    anchor=center
+  ] at (current page.center) {%
+    \iftoggle{draftmode}{%
+      \begin{minipage}[t][3.85in][t]{2.35in}
+        \csname zinepage#1\endcsname
+      \end{minipage}%
+    }{%
+      \ifnum#1=1
+      \begin{minipage}[t][4.25in][t]{2.75in}
+        \csname zinepage#1\endcsname
+      \end{minipage}%
+      \else
+      \begin{minipage}[t][3.75in][t]{2.35in}
+        \csname zinepage#1\endcsname
+      \end{minipage}%
+      \fi
+    }
+  };
+}
+
+% Page-aware imposed formatting. Short pages use larger type; dense pages use compact type.
+\newcommand{\imposedfontcategory}{13.0}
+\newcommand{\imposedfontcategoryline}{14.5}
+\newcommand{\imposedfonttitle}{10.2}
+\newcommand{\imposedfonttitleline}{11.5}
+\newcommand{\imposedfontbody}{8.0}
+\newcommand{\imposedfontbodyline}{9.1}
+\newcommand{\setimposedpagefit}[6]{%
+  % Uniform sizing is controlled by the shared values below; page-specific overrides are disabled.
+}
+
+\newcommand{\categorytitle}[1]{%
+  \begin{center}
+    \iftoggle{draftmode}{%
+      {\fontsize{15}{17}\selectfont\bfseries #1\par}%
+    }{%
+      {\fontsize{\imposedfontcategory}{\imposedfontcategoryline}\selectfont\bfseries #1\par}%
+    }
+  \end{center}%
+  \vspace{0.12em}%
+}
+\newcommand{\papertitle}[1]{%
+  \iftoggle{draftmode}{%
+    {\fontsize{11}{12.5}\selectfont\bfseries #1\par}%
+  }{%
+    {\fontsize{\imposedfonttitle}{\imposedfonttitleline}\selectfont\bfseries #1\par}%
+  }
+}
+\newcommand{\papercard}[4]{%
+  \par\vspace{0.10em}%
+  \papertitle{#1}%
+  \iftoggle{draftmode}{%
+    \vspace{0.08em}%
+    {\fontsize{8.5}{9.8}\selectfont
+    #2~|~{\itshape #3}\par}%
+    \vspace{0.08em}%
+    {\fontsize{8.5}{9.8}\selectfont #4\par}%
+  }{%
+    \vspace{0.03em}%
+    {\fontsize{\imposedfontbody}{\imposedfontbodyline}\selectfont
+    #2~|~{\itshape #3}\par}%
+    \vspace{0.03em}%
+    {\fontsize{\imposedfontbody}{\imposedfontbodyline}\selectfont #4\par}%
+  }
+}
+\newcommand{\smallpapercard}[4]{%
+  \par\vspace{0.18em}%
+  {\fontsize{8.8}{10.0}\selectfont\bfseries #1\par}%
+  \vspace{0.04em}%
+  {\fontsize{6.8}{7.8}\selectfont
+  #2~|~{\itshape #3}\par}%
+  \vspace{0.04em}%
+  {\fontsize{7.2}{8.2}\selectfont #4\par}%
+}
+\newcommand{\ugaauthor}[1]{\textcolor{red}{#1}}
+
+% ==============================================================================
+% DOCUMENT CONTENT (DEFINE YOUR 8 PAGES HERE)
+% ==============================================================================
+
+% Page 1: Front Cover
+\setzinepage{1}{%
+  \includegraphics[width=2.75in,height=4.25in]{friendsgiving_full_cover.png}%
+}
+
+% Page 2: Health & Work 1
+\setzinepage{2}{%
+  \setimposedpagefit{13.0}{14.5}{10.2}{11.5}{8.0}{9.1}%
+  \categorytitle{AI and Future of Health \& Work}%
+  \raggedright
+  \papercard{RadioLens: Seeing and Interacting with the Invisible Radio Environments}{Ethan Zhu, Jiaying Du, Lihao Zhang, Paul Kudyba, \ugaauthor{Zhenlin An}, et. al.}{GetMobile Mobile Computing and Communications}{Wireless signals are complex, spatially varying, and difficult to observe; RadioLens enables engineers to understand and interact with invisible radio environments.}
+  \vspace{0.18em}
+  \papercard{DPA: Deep Parcellation Analysis for Human Trait Prediction}{Xiaohe Chen, Zeliang Sun, \ugaauthor{Chao Huang}, \ugaauthor{Rongjie Liu}}{Neuroinformatics}{A geometry-informed deep approach identifies trait-relevant brain connections missed by endpoint-based connectome methods.}
+}
+
+% Page 3: Health & Work 2
+\setzinepage{3}{%
+  \setimposedpagefit{12.5}{14.0}{9.8}{11.0}{7.6}{8.7}%
+  \categorytitle{AI and Future of Health \& Work}%
+  \raggedright
+  \papercard{MEDQUA: A NISQ-Aware Quantum Adapter for Medical Vision--Language Models}{Yiwei Li, Yi Pan, Junhao Chen, \ugaauthor{Yifan Zhou}, et. al.}{IEEE International Symposium on Biomedical Imaging (ISBI)}{. MEDQUA introduces a NISQ-aware quantum adapter to improve robustness and representation quality in practical VLM medical image classification.}
+  \vspace{0.18em}
+  \papercard{Attention Feature Fusion with Cluster Contrastive Learning for Snoring and Breath-Holding Detection Using Seismic Sensing}{Yingjian Song, Jiayu Chen, Zixuan Zeng, Yida Zhang, Zaid Farooq Pitafi, Bradley G. Phillips, xiang zhang, \ugaauthor{Fei Dou}, et. al.}{IEEE International Conference on Pervasive Computing and Communications}{Attention-based  contrastive seismic-sensing tool for snoring and breath-holding detection. It improves the reliability of unobtrusive sleep-apnea screening in realistic deployment settings.}
+}
+
+% Pages 4--5: AI for 3F
+\setzinepage{4}{%
+  \setimposedpagefit{13.0}{14.5}{10.2}{11.5}{8.0}{9.1}%
+  \categorytitle{AI for 3F}%
+  \raggedright
+  \papercard{Contrastive multi-view representation learning for multi-camera plant phenotyping: A cotton field study}{Daniel J. Petti, \ugaauthor{Changying Li}, Ninghao Liu}{Plant Phenomics}{A self-supervised learning pipeline combines contrastive multi-view representations for cotton field phenotyping, reducing annotation requirements and improving agricultural computer vision.}
+  \vspace{0.18em}
+  \papercard{3D sensing and perception for precision weed management: a review of modalities, reconstruction pipelines, and context-aware detection}{Muneeb Elahi Malik, \ugaauthor{Md Sultan Mahmud}}{Computers and Electronics in Agriculture}{Reviews LiDAR-RGB fusion, reconstruction pipelines, and context-aware detection for precision weed management, highlighting practical strengths and field-level generalization limits.}
+}
+
+\setzinepage{5}{%
+  \setimposedpagefit{9.5}{11}{7.8}{8.8}{6.2}{7.1}%
+  \categorytitle{AI for 3F}%
+  \raggedright
+  \smallpapercard{Trajectory-synchronized diode laser actuation and dose-response field evaluation for precision weed control using a delta robot}{Muneeb Elahi Malik, Nicholas T. Basinger, Mehmet Kurum, Glen C. Rains, \ugaauthor{Md Sultan Mahmud}}{Computers and Electronics in Agriculture}{Weed control in Vidalia onion production is constrained by a narrow management window. This work presents trajectory-synchronized laser actuation and field dose-response evaluation for precision robotic weed control.}
+  \vspace{0.18em}
+  \smallpapercard{Associating panting levels of broiler breeders in a commercial battery cage barn with environmental and age factors via machine learning modeling}{Tongshuai Liu, \ugaauthor{Guoming Li}, Ning Kong, et. al.}{Poultry Science}{Uses machine-learning analysis of barn conditions and age effects to quantify panting behavior as an early heat-stress indicator in caged broiler breeders.}
+}
+
+% Pages 6--7: AI in Education
+\setzinepage{6}{%
+  \setimposedpagefit{13.0}{14.5}{10.2}{11.5}{8.0}{9.1}%
+  \categorytitle{AI in Education}%
+  \raggedright
+  \papercard{Critical Fairness Literacy for PK--12 teachers: a fairness-specific dimension of teacher AI competency}{\ugaauthor{Chan Aristella Lu}, Yun Zhang}{Journal of Research on Technology in Education}{Develops a structured Critical Fairness Literacy framework to help teachers evaluate and implement AI tools responsibly in PK--12 classrooms.}
+  \vspace{0.18em}
+  \papercard{SmartIPL: Smartphone Based Introductory Physics Labs}{\ugaauthor{Yiping Zhao}, Henning Meyer}{SPIE eBooks}{Presents smartphone-based introductory physics labs that broaden hands-on experimentation access and lower barriers for classroom implementation.}
+}
+
+\setzinepage{7}{%
+  \setimposedpagefit{13.0}{14.5}{10.2}{11.5}{8.0}{9.1}%
+  \categorytitle{AI in Education}%
+  \raggedright
+  \papercard{From prompt to context: Multi-theoretical ChatGPT design for teacher feedback in K-12 engineering terminology instruction}{\ugaauthor{Chan Aristella Lu}, Avik Kumar Dhar}{Theory Into Practice}{Presents a theory-informed ChatGPT design framework for improving instructional feedback quality in K--12 engineering terminology instruction.}
+  \vspace{0.18em}
+  \papercard{The Economics of Algorithmic Personalization: Evidence from an Educational Technology Platform}{Keshav Agrawal, Susan Carleton Athey, Ayush Kanodia, \ugaauthor{Shanjukta Nath}, et. al.}{National Bureau of Economic Research}{Analyzes personalized recommendation effects in educational technology with randomized evidence, showing measurable engagement gains from algorithmic personalization.}
+}
+% Page 8: AI Foundations
+\setzinepage{8}{%
+  \setimposedpagefit{13.0}{14.5}{10.2}{11.5}{8.0}{9.1}%
+  \categorytitle{AI Foundations}%
+  \raggedright
+  \papercard{Expediting Pre-training for Vision Transformers Through Hierarchical Data Sparsity Optimization}{Zhenglun Kong, Changdi Yang, Xuan Shen, Hao Tang, \ugaauthor{Geng Yuan}, et. al.}{International Journal of Computer Vision}{Reduces vision-transformer pre-training cost by exploiting hierarchical data sparsity across million-scale training data.}
+  \vspace{0.18em}
+  \papercard{Decision-theoretic planning and cognitive modeling for active cyber deception}{\ugaauthor{Aditya Vijay Shinde}, \ugaauthor{Prashant Doshi}}{Artificial Intelligence}{Combines decision-theoretic planning and cognitive modeling to design active cyber defenses that strategically manipulate attackers and adapt to uncertainty.}
+}
+
+% Page 9: Inside Back Cover
+\setzinepage{9}{}
+
+% Page 10: Back Cover
+\setzinepage{10}{
+  \vfill
+  \begin{center}{\small Institute for Artificial Intelligence}
+  \end{center}
+  \vfill
+}
+
+% ==============================================================================
+% DOCUMENT RENDERING
+% ==============================================================================
+\begin{document}
+
+\iftoggle{draftmode}{
+  % ---------------------------------------------------------------------------
+  % DRAFT MODE OUTPUT: One page per sheet, in reading order.
+  % ---------------------------------------------------------------------------
+  % Front cover as full bleed (no margins).
+  \newgeometry{margin=0pt}
+  \noindent\csname zinepage1\endcsname
+
+  % Remaining pages with standard draft margins.
+  \clearpage
+  \newgeometry{margin=0.2in}
+  \foreach \p [count=\i from 2] in {2,...,10}{%
+    \ifnum\i>2\clearpage\fi
+    \noindent
+    \begin{minipage}[t][3.55in][t]{2.35in}
+      \csname zinepage\p\endcsname
+      \vfill
+    \end{minipage}
+  }
+  \clearpage
+}{
+  % ---------------------------------------------------------------------------
+  % PRINT MODE OUTPUT: Full imposed 4x2 arrangement on one letter sheet.
+  % ---------------------------------------------------------------------------
+  \begin{tikzpicture}[remember picture, overlay]
+    % Top row: rotate 180 degrees to read correctly after folding.
+    \renderpanel{2}{180}{-4.125in}{2.125in}
+    \renderpanel{3}{180}{-1.375in}{2.125in}
+    \renderpanel{4}{180}{ 1.375in}{2.125in}
+    \renderpanel{5}{180}{ 4.125in}{2.125in}
+
+    % Bottom row: right-side up.
+    \renderpanel{1}{0}{-4.125in}{-2.125in}
+    \renderpanel{8}{0}{-1.375in}{-2.125in}
+    \renderpanel{7}{0}{ 1.375in}{-2.125in}
+    \renderpanel{6}{0}{ 4.125in}{-2.125in}
+
+    % Fold guide lines
+    \draw[dashed, gray!50, line width=0.5pt] (current page.north) -- (current page.south);
+    \draw[dashed, gray!50, line width=0.5pt] ($(current page.north west)!0.25!(current page.north east)$) -- ($(current page.south west)!0.25!(current page.south east)$);
+    \draw[dashed, gray!50, line width=0.5pt] ($(current page.north west)!0.75!(current page.north east)$) -- ($(current page.south west)!0.75!(current page.south east)$);
+    \draw[dashed, gray!50, line width=0.5pt] (current page.west) -- (current page.east);
+
+    % Center slit guide
+    \draw[red, line width=1.2pt]
+    ($(current page.west)!0.25!(current page.east)$) --
+    ($(current page.west)!0.75!(current page.east)$);
+  \end{tikzpicture}
+}
+
+\end{document}
