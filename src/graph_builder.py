@@ -17,7 +17,8 @@ MAX_REFS_PER_PAPER = 3000
 
 def safe_text(value, max_len=MAX_TEXT_LEN):
     text = value if isinstance(value, str) else ""
-    text = "".join(ch for ch in text if ch == "\n" or ch == "\t" or ord(ch) >= 32)
+    text = "".join(ch for ch in text if ch ==
+                   "\n" or ch == "\t" or ord(ch) >= 32)
     return text.strip()[:max_len]
 
 
@@ -79,7 +80,8 @@ def sanitize_author_list(authors):
         if not isinstance(author, dict):
             continue
         author_id = safe_identifier(author.get("id"))
-        author_name = safe_text(author.get("name"), max_len=200) or "Unknown author"
+        author_name = safe_text(author.get(
+            "name"), max_len=200) or "Unknown author"
         sanitized.append({"id": author_id, "name": author_name})
     return sanitized
 
@@ -95,6 +97,7 @@ def sanitize_reference_list(references):
             seen.add(ref_id)
             sanitized.append(ref_id)
     return sanitized
+
 
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
@@ -186,8 +189,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         #custom-tooltip {
             position: absolute; display: none; background: var(--g-tooltip-bg);
             border: 1px solid var(--g-btn-primary); padding: 12px; font-size: 13px;
-            color: var(--g-tooltip-text); z-index: 100; pointer-events: none; max-width: 320px; line-height: 1.4;
+            color: var(--g-tooltip-text); z-index: 100; pointer-events: auto; max-width: 320px; line-height: 1.4;
         }
+        #custom-tooltip a { color: #ff0000; text-decoration: underline; }
 
         #search-modal { display: none; position: absolute; top: 70px; left: 20px; background: var(--g-panel-bg); color: var(--g-panel-text); padding: 15px; border: 1px solid var(--g-btn-primary); z-index: 30; width: 300px; }
         #search-modal input { width: 100%; padding: 8px; box-sizing: border-box; margin-bottom: 10px; background: var(--g-bg); border: 1px solid var(--g-border); color: var(--g-text); }
@@ -268,15 +272,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         let clusterMap = {}; let labMap = {}; let colorIndex = 0; let labColorIndex = 0;
         const tooltip = document.getElementById('custom-tooltip');
         let tooltipAnchor = { x: 0, y: 0 };
+        let tooltipHideTimer = null;
 
         function hideTooltip() {
+            clearTimeout(tooltipHideTimer);
             tooltip.style.display = 'none';
             tooltip.innerHTML = '';
         }
 
+        function scheduleTooltipHide() {
+            clearTimeout(tooltipHideTimer);
+            tooltipHideTimer = setTimeout(function () {
+                if (!tooltip.matches(':hover')) hideTooltip();
+            }, 120);
+        }
+
+        tooltip.addEventListener('mouseenter', function () { clearTimeout(tooltipHideTimer); });
+        tooltip.addEventListener('mouseleave', hideTooltip);
+
         document.addEventListener('mousemove', function(e) {
             tooltipAnchor = { x: e.pageX + 15, y: e.pageY + 15 };
-            if (tooltip.style.display === 'block') {
+            if (tooltip.style.display === 'block' && !tooltip.matches(':hover')) {
                 tooltip.style.left = tooltipAnchor.x + 'px';
                 tooltip.style.top = tooltipAnchor.y + 'px';
             }
@@ -389,10 +405,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         function formatAuthors(authorsList, ugaAuthorsList) {
             if (!authorsList) return "";
-            return authorsList.map(a => 
-                ugaAuthorsList && ugaAuthorsList.includes(a.id) 
-                ? `<span class="uga-author-red">${escapeHtml(a.name)}</span>` 
-                : escapeHtml(a.name)
+            return authorsList.map(author => ugaAuthorsList && ugaAuthorsList.includes(author.id)
+                ? pageAnchor('author', {
+                    name: normalizeName(author.name),
+                    id: author.id
+                }, author.name, 'uga-author-red')
+                : escapeHtml(author.name)
             ).join(", ");
         }
 
@@ -400,17 +418,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         }
 
+        function pageLink(pageName, params) {
+            const url = new URL(pageName + '/', window.location.href);
+            Object.entries(params || {}).forEach(([key, value]) => url.searchParams.set(key, value));
+            return url.href;
+        }
+
+        function pageAnchor(pageName, params, label, className = '') {
+            const safeClass = className ? ` class="${className}"` : '';
+            return `<a${safeClass} href="${pageLink(pageName, params)}" target="_top" rel="noopener">${escapeHtml(label)}</a>`;
+        }
+
         function objectPageUrl(node) {
             if (!node) return null;
             if (currentMode === 'cluster' && node.cluster_name) {
-                return `cluster/?name=${encodeURIComponent(node.cluster_name)}`;
+                return pageLink('cluster', { name: node.cluster_name });
             }
             if (node.group === 'paper') {
-                return `paper/?id=${encodeURIComponent(node.id)}`;
+                return pageLink('paper', { id: node.id });
             }
             if (node.group === 'author') {
                 const n = node.normalized_name || normalizeName(node.label || '');
-                return `author/?name=${encodeURIComponent(n)}&id=${encodeURIComponent(node.id)}`;
+                return pageLink('author', { name: n, id: node.id });
             }
             return null;
         }
@@ -522,14 +551,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 if (nodeData.group === 'paper') {
                     let authHtml = formatAuthors(nodeData.authors_raw, nodeData.uga_authors);
                     let labHtml = nodeData.uga_lab ? `<br><span style="color:#ff0000;">Lab:</span> ${escapeHtml(nodeData.uga_lab)}` : '';
+                    let venue = nodeData.venue && nodeData.venue !== 'Unknown'
+                        ? pageAnchor('venue', { name: nodeData.venue }, nodeData.venue)
+                        : escapeHtml(nodeData.venue || 'Unknown');
+                    let cluster = nodeData.cluster_name
+                        ? pageAnchor('cluster', { name: nodeData.cluster_name }, nodeData.cluster_name)
+                        : 'Unassigned';
                     nodeData.hoverHtml = `
                         <div style="font-size: 14px; margin-bottom: 6px;"><b>${escapeHtml(nodeData.label)}</b></div>
-                        <div style="font-size: 12px; color:#ccc;">
+                        <div style="font-size: 12px; color:#ccc; line-height:1.55;">
+                            Published: ${escapeHtml(nodeData.publication_date || 'Unknown')}<br>
+                            Conference: ${venue}<br>
+                            Cluster: ${cluster}<br>
                             Authors: ${authHtml} ${labHtml}
                         </div>`;
                 } else if (nodeData.group === 'author') {
                     let affil = nodeData.is_uga ? "<span class='uga-author-red'>UGA Affiliate</span>" : "<span style='color:#888;'>External</span>";
-                    nodeData.hoverHtml = `<div style="font-size: 14px;"><b>${escapeHtml(nodeData.label)}</b></div><div style="font-size:12px; margin-top:4px;">${affil}</div>`;
+                    let authorName = nodeData.is_uga
+                        ? pageAnchor('author', { name: nodeData.normalized_name || normalizeName(nodeData.label), id: nodeData.id }, nodeData.label, 'uga-author-red')
+                        : escapeHtml(nodeData.label);
+                    nodeData.hoverHtml = `<div style="font-size: 14px;"><b>${authorName}</b></div><div style="font-size:12px; margin-top:4px;">${affil}</div>`;
                 }
 
                 // Styling Overrides
@@ -646,7 +687,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 }
             });
             network.on("blurNode", function () {
-                hideTooltip();
+                scheduleTooltipHide();
             });
             network.on("deselectNode", hideTooltip);
             network.on("dragStart", hideTooltip);
@@ -654,7 +695,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             network.on("click", function(params) {
                 if (!params.nodes || params.nodes.length === 0) hideTooltip();
             });
-            container.onmouseleave = hideTooltip;
+            container.onmouseleave = scheduleTooltipHide;
 
             network.on("beforeDrawing", function(ctx) {
                 if (currentMode !== 'cluster' && currentMode !== 'labs') return;
@@ -700,7 +741,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 const destination = objectPageUrl(selectedNode);
 
                 if (!isFilteredView && destination) {
-                    window.location.href = destination;
+                    window.top.location.href = destination;
                     return;
                 }
                 
@@ -718,10 +759,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     let lab = selectedNode.uga_lab ? ` | <span style="color:#ff0000">${escapeHtml(selectedNode.uga_lab)}</span>` : '';
                     let safeUrl = safeExternalUrl(selectedNode.url);
                     let link = safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener">[View]</a>` : '';
-                    header.innerHTML = `<div style="margin-bottom: 2px;"><b>${escapeHtml(selectedNode.label)}</b> ${lab} ${link}</div> <div style="font-size:12px; color:#aaa;">By: ${auths}</div>`;
+                    let venue = selectedNode.venue && selectedNode.venue !== 'Unknown'
+                        ? pageAnchor('venue', { name: selectedNode.venue }, selectedNode.venue)
+                        : escapeHtml(selectedNode.venue || 'Unknown');
+                    let cluster = selectedNode.cluster_name
+                        ? pageAnchor('cluster', { name: selectedNode.cluster_name }, selectedNode.cluster_name)
+                        : 'Unassigned';
+                    header.innerHTML = `<div style="margin-bottom: 2px;"><b>${escapeHtml(selectedNode.label)}</b> ${link}</div><div style="font-size:12px;color:#aaa;">Published: ${escapeHtml(selectedNode.publication_date || 'Unknown')} · Conference: ${venue} · Cluster: ${cluster}${lab}<br>By: ${auths}</div>`;
                 } else {
                     let affil = selectedNode.is_uga ? "(UGA IAI Faculty/Student)" : "(External Collaborator)";
-                    header.innerHTML = `<div><b style="color:#ff0000">${escapeHtml(selectedNode.label)}</b> ${affil}</div>`;
+                    let authorName = selectedNode.is_uga
+                        ? pageAnchor('author', { name: selectedNode.normalized_name || normalizeName(selectedNode.label), id: selectedNode.id }, selectedNode.label, 'uga-author-red')
+                        : escapeHtml(selectedNode.label);
+                    header.innerHTML = `<div><b>${authorName}</b> ${affil}</div>`;
                 }
 
                 // If user clicks an injected paper in author mode, switch to paper mode to view it properly
@@ -817,6 +867,15 @@ def build_interactive_graph():
             for person in roster
             if isinstance(person, dict) and person.get("normalized_name")
         }
+        known_uga_labs = {
+            lab
+            for person in roster
+            if isinstance(person, dict)
+            for lab in person.get("labs", [])
+            if lab and lab != "Uncertain"
+        }
+    else:
+        known_uga_labs = set()
 
     nodes = []
     edges = []
@@ -842,7 +901,8 @@ def build_interactive_graph():
 
         uga_authors_raw = p.get("uga_authors", [])
         if isinstance(uga_authors_raw, list):
-            uga_authors = [aid for aid in (safe_identifier(x) for x in uga_authors_raw) if aid]
+            uga_authors = [aid for aid in (
+                safe_identifier(x) for x in uga_authors_raw) if aid]
         else:
             uga_authors = []
         uga_authors = sorted(set(uga_authors), key=str)
@@ -850,11 +910,12 @@ def build_interactive_graph():
         uga_labs_raw = p.get("uga_labs", [])
         if isinstance(uga_labs_raw, list):
             uga_labs = [safe_text(lab, max_len=200) for lab in uga_labs_raw]
-            uga_labs = [lab for lab in uga_labs if lab]
+            uga_labs = sorted(
+                {lab for lab in uga_labs if lab in known_uga_labs})
         else:
             uga_labs = []
 
-        uga_lab = safe_text(p.get("uga_lab"), max_len=200) or None
+        uga_lab = ", ".join(uga_labs) or None
 
         nodes.append(
             {
@@ -889,7 +950,8 @@ def build_interactive_graph():
             valid_auths.append({"id": author_id, "name": author_name})
 
             # NEW: Log authored edges so we can display papers in Author mode
-            edges.append({"from": author_id, "to": paper_id, "type": "authored"})
+            edges.append(
+                {"from": author_id, "to": paper_id, "type": "authored"})
             if author_id not in author_nodes:
                 normalized = normalize_name(author_name)
                 roster_person = roster_by_name.get(normalized)
@@ -910,10 +972,12 @@ def build_interactive_graph():
 
         for i in range(len(valid_auths)):
             for j in range(i + 1, len(valid_auths)):
-                pair = tuple(sorted([valid_auths[i]["id"], valid_auths[j]["id"]]))
+                pair = tuple(
+                    sorted([valid_auths[i]["id"], valid_auths[j]["id"]]))
                 if pair not in coauthors:
                     coauthors.add(pair)
-                    edges.append({"from": pair[0], "to": pair[1], "type": "coauthor"})
+                    edges.append(
+                        {"from": pair[0], "to": pair[1], "type": "coauthor"})
 
     nodes.extend(list(author_nodes.values()))
     os.makedirs("docs", exist_ok=True)
@@ -927,4 +991,4 @@ def build_interactive_graph():
 
 
 if __name__ == "__main__":
-    build_interactive_graph();
+    build_interactive_graph()

@@ -11,11 +11,13 @@
 
 <input type="text" id="db-search" placeholder="Type to filter publications..." style="width: 100%; padding: 12px; margin-bottom: 20px; font-size: 16px; border: 1px solid var(--primary-color, #ff0000); background: var(--code-bg-color, #111); color: var(--font-color, #fff); border-radius: 4px;">
 
-<div style="overflow-x:auto;">
+<div class="search-table-wrap">
   <table id="pub-table" style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: left;">
     <thead>
       <tr style="background-color: var(--primary-color, #ff0000); color: white;">
         <th style="padding: 10px; border: 1px solid #444;">Title</th>
+        <th style="padding: 10px; border: 1px solid #444;">Date published</th>
+        <th style="padding: 10px; border: 1px solid #444;">Conference / Venue</th>
         <th style="padding: 10px; border: 1px solid #444;">Authors</th>
         <th style="padding: 10px; border: 1px solid #444;">Lab</th>
         <th style="padding: 10px; border: 1px solid #444;">AI Domain Cluster</th>
@@ -34,6 +36,12 @@ function normalizeName(name) {
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+function detailUrl(pageName, params) {
+  const url = new URL(`../${pageName}/`, window.location.href);
+  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
+  return url.href;
 }
 
 async function loadSearchData() {
@@ -70,7 +78,7 @@ loadSearchData()
             const authorStr = p.authors_raw ? p.authors_raw.map(a => a.name).join(', ') : '';
             const labStr = (p.uga_labs && p.uga_labs.length) ? p.uga_labs.join(', ') : (p.uga_lab || 'N/A');
             const clusterStr = p.cluster_name || 'Unassigned';
-            const searchBlob = `${p.label} ${authorStr} ${labStr} ${clusterStr}`.toLowerCase();
+            const searchBlob = `${p.label} ${p.publication_date} ${p.venue} ${authorStr} ${labStr} ${clusterStr}`.toLowerCase();
             return searchBlob.includes(q);
         });
 
@@ -80,22 +88,28 @@ loadSearchData()
         toShow.forEach(p => {
             const ugaIds = new Set(p.uga_authors || []);
             const authorStr = p.authors_raw ? p.authors_raw.map(a => {
-                const name = String(a.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const href = `author/?name=${encodeURIComponent(normalizeName(a.name || ''))}&id=${encodeURIComponent(a.id || '')}`;
+            const name = escapeHtml(a.name || 'Unknown');
+            const href = detailUrl('author', { name: normalizeName(a.name || ''), id: a.id || '' });
             const linked = `<a href="${href}">${name}</a>`;
-            return ugaIds.has(a.id) ? `<span style="color:#ff0000;font-weight:bold">${linked}</span>` : linked;
+            return ugaIds.has(a.id) ? `<span class="uga-author-name">${linked}</span>` : linked;
             }).join(', ') : '';
+          const safeDate = escapeHtml(p.publication_date || 'Unknown');
+          const venue = p.venue || 'Unknown';
+          const venueHref = detailUrl('venue', { name: venue });
+          const safeVenue = escapeHtml(venue);
           const safeLabel = escapeHtml(p.label || 'Untitled');
           const labStr = (p.uga_labs && p.uga_labs.length) ? p.uga_labs.join(', ') : (p.uga_lab || 'N/A');
           const safeLab = escapeHtml(labStr);
           const clusterStr = p.cluster_name || 'Unassigned';
           const safeCluster = escapeHtml(clusterStr);
-          const clusterHref = `cluster/?name=${encodeURIComponent(clusterStr)}`;
-          const paperHref = `paper/?id=${encodeURIComponent(p.id || '')}`;
+          const clusterHref = detailUrl('cluster', { name: clusterStr });
+          const paperHref = detailUrl('paper', { id: p.id || '' });
             
             const tr = document.createElement('tr');
             tr.innerHTML = `
           <td style="padding: 10px; border: 1px solid #444;"><a href="${paperHref}" style="color:var(--primary-color, #ff0000); text-decoration:underline; opacity:1;">${safeLabel}</a></td>
+                <td style="padding: 10px; border: 1px solid #444;">${safeDate}</td>
+                <td style="padding: 10px; border: 1px solid #444;"><a href="${venueHref}">${safeVenue}</a></td>
                 <td style="padding: 10px; border: 1px solid #444;">${authorStr}</td>
             <td style="padding: 10px; border: 1px solid #444;">${safeLab}</td>
           <td style="padding: 10px; border: 1px solid #444;"><a href="${clusterHref}">${safeCluster}</a></td>
@@ -104,7 +118,7 @@ loadSearchData()
         });
         
         if (toShow.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="padding: 10px; text-align: center;">No results found.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="padding: 10px; text-align: center;">No results found.</td></tr>`;
         }
     }
     

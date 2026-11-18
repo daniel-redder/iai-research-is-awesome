@@ -18,4 +18,4 @@
   </table>
 </div>
 
-<script src="javascripts/detail-pages.js"></script>
+<script src="../javascripts/detail-pages.js"></script>

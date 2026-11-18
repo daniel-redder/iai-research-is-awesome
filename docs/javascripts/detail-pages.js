@@ -106,18 +106,64 @@
         }
 
         tbody.innerHTML = papers.map(function (paper) {
+            var ugaIds = new Set(paper.uga_authors || []);
             var authors = (paper.authors_raw || []).map(function (author) {
                 var authorName = author && author.name ? author.name : "Unknown";
                 var authorId = author && author.id ? author.id : "";
                 var href = pageUrl("author", { name: normalizeName(authorName), id: authorId });
-                return '<a href="' + href + '">' + escapeHtml(authorName) + "</a>";
+                var nameClass = ugaIds.has(authorId) ? ' class="uga-author-name"' : "";
+                return '<a href="' + href + '"' + nameClass + '>' + escapeHtml(authorName) + "</a>";
             }).join(", ");
 
             return "<tr>" +
                 '<td><a href="' + pageUrl("paper", { id: paper.id }) + '">' + escapeHtml(paper.label || "Untitled") + "</a></td>" +
                 "<td>" + escapeHtml(paper.publication_date || "Unknown") + "</td>" +
                 "<td>" + authors + "</td>" +
-                "<td>" + escapeHtml(paper.venue || "Unknown") + "</td>" +
+                '<td><a href="' + pageUrl("venue", { name: paper.venue || "Unknown" }) + '">' + escapeHtml(paper.venue || "Unknown") + "</a></td>" +
+                "</tr>";
+        }).join("");
+    }
+
+    function renderVenuePage(data, params) {
+        var venueName = sanitizeQueryValue(params.get("name") || "");
+        var titleEl = document.getElementById("venue-title");
+        var countEl = document.getElementById("venue-count");
+        var tbody = document.getElementById("venue-table-body");
+
+        if (!venueName) {
+            titleEl.textContent = "Missing conference or venue";
+            tbody.innerHTML = '<tr><td colspan="4">Add ?name=Conference%20Name to the URL.</td></tr>';
+            return;
+        }
+
+        var papers = data.nodes
+            .filter(function (node) { return node.group === "paper" && (node.venue || "Unknown") === venueName; })
+            .sort(function (a, b) { return String(b.publication_date || "").localeCompare(String(a.publication_date || "")); });
+
+        titleEl.textContent = venueName;
+        countEl.textContent = papers.length + " paper" + (papers.length === 1 ? "" : "s");
+
+        if (!papers.length) {
+            tbody.innerHTML = '<tr><td colspan="4">No papers found for this conference or venue.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = papers.map(function (paper) {
+            var ugaIds = new Set(paper.uga_authors || []);
+            var authors = (paper.authors_raw || []).map(function (author) {
+                var name = author && author.name ? author.name : "Unknown";
+                var id = author && author.id ? author.id : "";
+                var href = pageUrl("author", { name: normalizeName(name), id: id });
+                var className = ugaIds.has(id) ? ' class="uga-author-name"' : "";
+                return '<a href="' + href + '"' + className + '>' + escapeHtml(name) + "</a>";
+            }).join(", ");
+            var cluster = paper.cluster_name || "Unassigned";
+
+            return "<tr>" +
+                '<td><a href="' + pageUrl("paper", { id: paper.id }) + '">' + escapeHtml(paper.label || "Untitled") + "</a></td>" +
+                "<td>" + escapeHtml(paper.publication_date || "Unknown") + "</td>" +
+                "<td>" + authors + "</td>" +
+                '<td><a href="' + pageUrl("cluster", { name: cluster }) + '">' + escapeHtml(cluster) + "</a></td>" +
                 "</tr>";
         }).join("");
     }
@@ -132,11 +178,13 @@
             return;
         }
 
+        var ugaIds = new Set(paper.uga_authors || []);
         var authorsHtml = (paper.authors_raw || []).map(function (author) {
             var authorName = author && author.name ? author.name : "Unknown";
             var authorId = author && author.id ? author.id : "";
             var href = pageUrl("author", { name: normalizeName(authorName), id: authorId });
-            return '<li><a href="' + href + '">' + escapeHtml(authorName) + "</a>" +
+            var nameClass = ugaIds.has(authorId) ? ' class="uga-author-name"' : "";
+            return '<li><a href="' + href + '"' + nameClass + '>' + escapeHtml(authorName) + "</a>" +
                 (authorId ? ' <span class="meta">(' + escapeHtml(authorId) + ")</span>" : "") +
                 "</li>";
         }).join("");
@@ -148,7 +196,7 @@
             '<div class="meta-grid">' +
             '<div><strong>Publication date:</strong> ' + escapeHtml(paper.publication_date || "Unknown") + "</div>" +
             '<div><strong>Cluster:</strong> <a href="' + pageUrl("cluster", { name: paper.cluster_name || "Unassigned" }) + '">' + escapeHtml(paper.cluster_name || "Unassigned") + "</a></div>" +
-            '<div><strong>Venue:</strong> ' + escapeHtml(paper.venue || "Unknown") + "</div>" +
+            '<div><strong>Venue:</strong> <a href="' + pageUrl("venue", { name: paper.venue || "Unknown" }) + '">' + escapeHtml(paper.venue || "Unknown") + "</a></div>" +
             '<div><strong>OpenAlex ID:</strong> ' + escapeHtml(paper.id || "Unknown") + "</div>" +
             (externalPaperUrl ? '<div><strong>Publication URL:</strong> <a href="' + escapeHtml(externalPaperUrl) + '" target="_blank" rel="noopener">Open paper</a></div>' : "") +
             "</div>" +
@@ -250,6 +298,7 @@
         }
 
         var displayIdSet = new Set(displayIds);
+        var isUgaAuthor = displayIds.some(function (authorId) { return rosterIds.has(authorId); });
 
         var publications = Array.from(authorBucket.publications.values())
             .filter(function (entry) {
@@ -280,13 +329,14 @@
                 '<td><a href="' + pageUrl("paper", { id: paper.id }) + '">' + escapeHtml(paper.label || "Untitled") + "</a></td>" +
                 "<td>" + escapeHtml(paper.publication_date || "Unknown") + "</td>" +
                 '<td><a href="' + pageUrl("cluster", { name: paper.cluster_name || "Unassigned" }) + '">' + escapeHtml(paper.cluster_name || "Unassigned") + "</a></td>" +
+                '<td><a href="' + pageUrl("venue", { name: paper.venue || "Unknown" }) + '">' + escapeHtml(paper.venue || "Unknown") + "</a></td>" +
                 "</tr>";
         }).join("");
 
         var externalProfileUrl = metadataSource ? safeExternalUrl(metadataSource.roster_profile_url) : "";
 
         body.innerHTML = "" +
-            "<h1>" + escapeHtml(representativeName) + "</h1>" +
+            '<h1' + (isUgaAuthor ? ' class="uga-author-name"' : "") + ">" + escapeHtml(representativeName) + "</h1>" +
             '<div class="meta-grid">' +
             "<div><strong>Entity type:</strong> " + escapeHtml(groupLabel) + "</div>" +
             "<div><strong>Title:</strong> " + escapeHtml(title) + "</div>" +
@@ -300,7 +350,7 @@
                 : "<p>No author IDs available.</p>") +
             "<h2>Publications in this dataset</h2>" +
             (publications.length
-                ? '<table class="detail-table"><thead><tr><th>Title</th><th>Date</th><th>Cluster</th></tr></thead><tbody>' + publicationRows + "</tbody></table>"
+                ? '<table class="detail-table"><thead><tr><th>Title</th><th>Date</th><th>Cluster</th><th>Conference</th></tr></thead><tbody>' + publicationRows + "</tbody></table>"
                 : "<p>No publications found for this merged author entity.</p>");
     }
 
@@ -316,6 +366,7 @@
                 if (pageType === "cluster") renderClusterPage(data, params);
                 else if (pageType === "paper") renderPaperPage(data, params);
                 else if (pageType === "author") renderAuthorPage(data, params);
+                else if (pageType === "venue") renderVenuePage(data, params);
             })
             .catch(function (error) {
                 container.innerHTML = '<p>Could not load graph data: ' + escapeHtml(error.message) + "</p>";

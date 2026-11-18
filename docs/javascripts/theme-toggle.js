@@ -82,6 +82,110 @@
         }
     }
 
+    function buildYearSelector(siteName) {
+        if (document.querySelector(".header-year-control")) return;
+
+        var control = document.createElement("div");
+        control.className = "header-year-control";
+        control.innerHTML = "" +
+            '<button type="button" class="header-year-trigger" aria-expanded="false" aria-controls="header-year-menu">' +
+            '<span>YEAR</span><strong class="header-year-value"></strong><span aria-hidden="true">&#9662;</span>' +
+            "</button>" +
+            '<div class="header-year-menu" id="header-year-menu" role="group" aria-label="Select publication year" hidden>' +
+            '<button type="button" class="header-year-step" data-step="-1" aria-label="Newer year" title="Newer year">&#9650;</button>' +
+            '<select class="header-year-select" aria-label="Publication year"></select>' +
+            '<button type="button" class="header-year-step" data-step="1" aria-label="Older year" title="Older year">&#9660;</button>' +
+            "</div>";
+
+        var trigger = control.querySelector(".header-year-trigger");
+        var value = control.querySelector(".header-year-value");
+        var menu = control.querySelector(".header-year-menu");
+        var select = control.querySelector(".header-year-select");
+        var stepButtons = control.querySelectorAll(".header-year-step");
+        var selectedYear = window.localStorage.getItem("uga-selected-year") || String(new Date().getFullYear());
+        var years = [selectedYear];
+
+        function refreshControls() {
+            var selectedIndex = years.indexOf(select.value);
+            stepButtons.forEach(function (button) {
+                var nextIndex = selectedIndex + Number(button.getAttribute("data-step"));
+                button.disabled = nextIndex < 0 || nextIndex >= years.length;
+            });
+        }
+
+        function applyYear(year) {
+            if (window.UGAYearFilter) window.UGAYearFilter.setSelectedYear(year);
+            else window.localStorage.setItem("uga-selected-year", String(year));
+            window.location.reload();
+        }
+
+        function renderYears(availableYears) {
+            years = availableYears.length ? availableYears : [selectedYear];
+            select.innerHTML = years.map(function (year) {
+                return '<option value="' + year + '">' + year + "</option>";
+            }).join("");
+            selectedYear = window.UGAYearFilter
+                ? window.UGAYearFilter.selectedYear(years.map(function (year) { return { publication_date: year + "-01-01" }; }))
+                : selectedYear;
+            select.value = selectedYear;
+            value.textContent = selectedYear;
+            refreshControls();
+        }
+
+        trigger.addEventListener("click", function () {
+            var isOpen = trigger.getAttribute("aria-expanded") === "true";
+            trigger.setAttribute("aria-expanded", String(!isOpen));
+            menu.hidden = isOpen;
+            if (!isOpen) select.focus();
+        });
+        select.addEventListener("change", function () { applyYear(select.value); });
+        stepButtons.forEach(function (button) {
+            button.addEventListener("click", function () {
+                var nextIndex = years.indexOf(select.value) + Number(button.getAttribute("data-step"));
+                if (years[nextIndex]) applyYear(years[nextIndex]);
+            });
+        });
+        document.addEventListener("click", function (event) {
+            if (!control.contains(event.target)) {
+                menu.hidden = true;
+                trigger.setAttribute("aria-expanded", "false");
+            }
+        });
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && !menu.hidden) {
+                menu.hidden = true;
+                trigger.setAttribute("aria-expanded", "false");
+                trigger.focus();
+            }
+        });
+
+        siteName.insertBefore(control, siteName.firstChild);
+        value.textContent = selectedYear;
+        select.innerHTML = '<option value="' + selectedYear + '">' + selectedYear + "</option>";
+        refreshControls();
+
+        var siteHome = siteName.querySelector("a");
+        var siteRoot = siteHome ? siteHome.href : window.location.href;
+        var dataUrls = [
+            new URL("graph_data.json", siteRoot),
+            new URL("../graph_data.json", window.location.href),
+            new URL("/graph_data.json", window.location.origin),
+        ];
+        dataUrls.reduce(function (promise, url) {
+            return promise.catch(function () {
+                return fetch(url).then(function (response) {
+                    if (!response.ok) throw new Error("Graph data unavailable");
+                    return response.json();
+                });
+            });
+        }, Promise.reject(new Error("Graph data not loaded")))
+            .then(function (data) {
+                var papers = (data.nodes || []).filter(function (node) { return node.group === "paper"; });
+                renderYears(window.UGAYearFilter ? window.UGAYearFilter.availableYears(papers) : []);
+            })
+            .catch(function () {});
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         var preferredTheme = getPreferredTheme();
         applyTheme(preferredTheme);
@@ -89,17 +193,11 @@
 
         var logo = document.querySelector("#mkdocs-terminal-site-name a");
         if (logo) {
-            logo.innerHTML = "IAI@UGA<br>Research is<br>Awesome!";
+            logo.textContent = "IAI@UGA Research is Awesome!";
         }
 
         var siteName = document.querySelector("#mkdocs-terminal-site-name");
-        if (siteName && !document.querySelector(".header-year-marker")) {
-            var yearMarker = document.createElement("span");
-            yearMarker.className = "header-year-marker";
-            yearMarker.textContent = window.localStorage.getItem("uga-selected-year") || String(new Date().getFullYear());
-            yearMarker.setAttribute("aria-label", "Selected publication year");
-            siteName.insertBefore(yearMarker, siteName.firstChild);
-        }
+        if (siteName) buildYearSelector(siteName);
     });
 
     var media = window.matchMedia("(prefers-color-scheme: dark)");

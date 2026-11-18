@@ -12,20 +12,6 @@ I made this tool for IAI's use, but it is not officially sponsored or endorsed b
 
 ----
 
-<div class="year-selector-widget" id="year-selector-widget" aria-label="Choose publication year">
-  <div class="year-selector-orbit" aria-hidden="true">
-    <span></span><span></span><span></span>
-  </div>
-  <div class="year-selector-copy">
-    <span class="year-selector-kicker">Research timeline</span>
-    <strong>Explore <span id="year-selector-label">the selected year</span></strong>
-  </div>
-  <label class="year-selector-control">
-    <span>Publication year</span>
-    <select id="year-selector" aria-label="Publication year"></select>
-  </label>
-</div>
-
 <div class="repo-status-grid">
   <div class="repo-status-card database-search-card">
     <div class="database-search-summary">

@@ -22,7 +22,7 @@
 
     function setSelectedYear(year) {
         localStorage.setItem(STORAGE_KEY, String(year));
-        const marker = document.querySelector('.header-year-marker');
+        const marker = document.querySelector('.header-year-value');
         if (marker) marker.textContent = String(year);
         window.dispatchEvent(new CustomEvent('uga-year-change', { detail: { year: String(year) } }));
     }

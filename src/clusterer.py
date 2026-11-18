@@ -37,16 +37,26 @@ RESEARCH_CATEGORIES = {
 }
 
 FOUNDATIONAL_CATEGORY = "Foundational AI."
+AGRICULTURE_CATEGORY = "AI for 3F."
 FOUNDATIONAL_PRIOR = 0.9
 DOMAIN_PREFERENCE_MARGIN = 0.03
 MAX_TEXT_FIELD_LEN = 4000
 MAX_ABSTRACT_TOKENS = 12000
 MAX_ABSTRACT_POSITION = 50000
+AGRICULTURE_TITLE_PATTERN = re.compile(
+    r"\b(?:agricultur\w*|agronom\w*|crops?|cropping|farms?|farming|poultry|"
+    r"broilers?|chickens?|livestock|cattle|piglets?|forestr\w*|timberland|"
+    r"alfalfa|cotton|irrigation|horticulture|aquaculture|aquaponics|dairy|"
+    r"agri[- ]food|food production|weed (?:management|control)|"
+    r"plant (?:breeding|phenotyping|protein|disease|health|growth))\b",
+    re.IGNORECASE,
+)
 
 
 def safe_text(value, max_len=MAX_TEXT_FIELD_LEN):
     text = value if isinstance(value, str) else ""
-    text = "".join(ch for ch in text if ch == "\n" or ch == "\t" or ord(ch) >= 32)
+    text = "".join(ch for ch in text if ch ==
+                   "\n" or ch == "\t" or ord(ch) >= 32)
     return text.strip()[:max_len]
 
 
@@ -103,6 +113,13 @@ def paper_text(paper):
     return f"{title} {abstract}".strip()
 
 
+def is_agriculture_paper(paper):
+    """Detect clear agriculture, food, livestock, and forestry work from its title."""
+    if not isinstance(paper, dict):
+        return False
+    return bool(AGRICULTURE_TITLE_PATTERN.search(safe_text(paper.get("title", ""))))
+
+
 def generate_copilot_cluster_name(tfidf_matrix, vectorizer, cluster_indices):
     """Assign a cluster while preferring domain categories over Foundational AI when close."""
     if not cluster_indices:
@@ -116,13 +133,16 @@ def generate_copilot_cluster_name(tfidf_matrix, vectorizer, cluster_indices):
     similarities = cosine_similarity(cluster_center, category_matrix).ravel()
     scores = dict(zip(category_names, similarities, strict=True))
 
-    foundational_score = scores.get(FOUNDATIONAL_CATEGORY, 0.0) * FOUNDATIONAL_PRIOR
-    domain_scores = {k: v for k, v in scores.items() if k != FOUNDATIONAL_CATEGORY}
+    foundational_score = scores.get(
+        FOUNDATIONAL_CATEGORY, 0.0) * FOUNDATIONAL_PRIOR
+    domain_scores = {k: v for k, v in scores.items() if k !=
+                     FOUNDATIONAL_CATEGORY}
 
     if not domain_scores:
         return FOUNDATIONAL_CATEGORY
 
-    best_domain, best_domain_score = max(domain_scores.items(), key=lambda item: item[1])
+    best_domain, best_domain_score = max(
+        domain_scores.items(), key=lambda item: item[1])
 
     # Prefer domain-specific categories unless Foundational is clearly stronger.
     if best_domain_score >= foundational_score - DOMAIN_PREFERENCE_MARGIN:
@@ -185,7 +205,8 @@ def run_clustering():
 
     old_clusters = {name: idxs for name, idxs in old_clusters.items() if name}
 
-    centroids = {c: np.asarray(tfidf_matrix[i].mean(axis=0)) for c, i in old_clusters.items()}
+    centroids = {c: np.asarray(tfidf_matrix[i].mean(
+        axis=0)) for c, i in old_clusters.items()}
 
     unassigned_indices = []
     for idx in range(len(old_data), len(all_papers)):
@@ -204,8 +225,10 @@ def run_clustering():
 
     if unassigned_indices:
         unassigned_matrix = tfidf_matrix[unassigned_indices]
-        k = min(3, len(unassigned_indices))  # Force multiple clusters for our demo
-        kmeans = KMeans(n_clusters=k, random_state=42, n_init="auto").fit(unassigned_matrix)
+        # Force multiple clusters for our demo
+        k = min(3, len(unassigned_indices))
+        kmeans = KMeans(n_clusters=k, random_state=42,
+                        n_init="auto").fit(unassigned_matrix)
 
         for cluster_id in range(k):
             local_indices = np.where(kmeans.labels_ == cluster_id)[0]
@@ -216,6 +239,10 @@ def run_clustering():
             )
             for g_idx in global_indices:
                 all_papers[g_idx]["cluster_name"] = new_cluster_name
+
+    for paper in all_papers:
+        if is_agriculture_paper(paper):
+            paper["cluster_name"] = AGRICULTURE_CATEGORY
 
     with open("data/papers_raw.json", "w") as f:
         json.dump(all_papers, f, indent=2)

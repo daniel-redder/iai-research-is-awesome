@@ -1,6 +1,8 @@
 (function () {
     const stopWords = new Set("a about above after again against all am an and any are as at be because been before being below between both but by can could did do does doing down during each few for from further had has have having he her here hers herself him himself his how i if in into is it its itself just me more most my myself no nor not of off on once only or other our ours ourselves out over own same she should so some such than that the their theirs them themselves then there these they this those through to too under until up us very was we were what when where which while who whom why with you your yours yourself yourselves and also using based study model models data research work works paper papers across method methods existing result results framework evaluation accuracy propose design".split(/\s+/));
 
+    stopWords.add('thi');
+
     const commonTerms = [
         { label: 'large language models', regex: /\blarge language models?\b/g },
         { label: 'reinforcement learning', regex: /\breinforcement learning\b/g },
@@ -287,128 +289,79 @@
 
         const chart = document.getElementById('cluster-year-chart');
         if (chart) {
-            const title = document.getElementById('year-chart-title');
-            if (title) title.textContent = selectedYear;
-
             const clusters = new Map();
-            const labs = new Set();
-            const formalLabs = new Set([
-                '3d optical sensing laboratory', 'ai4stem education center',
-                'center for geospatial research', 'developmental dynamics lab',
-                'douglass lab', 'evolutionary computation and machine learning laboratory',
-                'heterogeneous robotics research lab', 'hero lab', 'hoarfrost lab',
-                'knowledge intelligence for discovery and decision making lab', 'lei zhang lab',
-                'ma lab', 'model research group', 'neurocognition science laboratory',
-                'physical activity community environment lab', 'ping ma lab', 'rail lab',
-                'second language acquisition and cognition lab', 'smart lab', 'song lab',
-                'small satellite research laboratory', 'sundaram lab', 'thinc lab',
-                'torrance center', 'virtual experiences laboratory', 'zhao research group'
-            ]);
-            function normalizeLabName(value) {
-                return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-            }
-            function canonicalLab(value) {
-                const normalized = normalizeLabName(value);
-                if (!normalized) return 'Unknown';
-                if (normalized.includes('small satellite research laboratory') || normalized.includes('ssrl')) {
-                    return 'UGA Small Satellite Research Laboratory (SSRL)';
-                }
-                if (normalized.includes('center for geospatial research') || normalized === 'cgr') {
-                    return 'Center for Geospatial Research (CGR)';
-                }
-                for (const formal of formalLabs) {
-                    if (normalized.includes(formal) || formal.includes(normalized)) {
-                        const aliases = {
-                            'ai4stem education center': 'AI4STEM Education Center',
-                            'rail lab': 'The RAIL Lab', 'thinc lab': 'THINC Lab',
-                            'hero lab': 'HeRo Lab', 'ping ma lab': 'Ping Ma Lab',
-                            'ma lab': 'The Ma Lab', 'hoarfrost lab': 'The Hoarfrost Lab',
-                            'torrance center': 'Torrance Center'
-                        };
-                        return aliases[formal] || String(value).replace(/\s+/g, ' ').trim();
-                    }
-                }
-                return 'Unknown';
-            }
-
+            const labs = new Map();
             papersPublishedThisYear.forEach(paper => {
                 const cluster = paper.cluster_name || 'Unassigned';
                 if (!clusters.has(cluster)) clusters.set(cluster, new Map());
-                const labNames = (paper.uga_labs && paper.uga_labs.length)
-                    ? paper.uga_labs
-                    : [paper.uga_lab || 'Unassigned lab'];
-                labNames.forEach(lab => {
-                    const cleanLab = canonicalLab(lab);
-                    labs.add(cleanLab);
-                    const labCounts = clusters.get(cluster);
-                    labCounts.set(cleanLab, (labCounts.get(cleanLab) || 0) + 1);
+                const paperLabs = new Set((paper.uga_labs || []).filter(Boolean));
+                paperLabs.forEach(lab => {
+                    const counts = clusters.get(cluster);
+                    counts.set(lab, (counts.get(lab) || 0) + 1);
+                    labs.set(lab, (labs.get(lab) || 0) + 1);
                 });
             });
 
             chart.innerHTML = '';
-            chart.style.display = 'grid';
-            chart.style.gridTemplateColumns = 'minmax(0, 1fr) 220px';
-            chart.style.alignItems = 'stretch';
+            chart.classList.add('cluster-lab-heatmap');
 
             if (!clusters.size) {
-                chart.innerHTML = '<div class="year-bar-empty">No papers in this year</div>';
+                chart.innerHTML = '<p class="heatmap-empty">No papers in this year.</p>';
+            } else if (!labs.size) {
+                chart.innerHTML = '<p class="heatmap-empty">No UGA lab affiliations are listed for this year.</p>';
             } else {
-                const labList = [...labs].sort((a, b) => a.localeCompare(b));
-                const palette = ['#e03131', '#1c7ed6', '#2f9e44', '#f59f00', '#7950f2', '#0ca678', '#d6336c', '#495057'];
-                const labColors = new Map(labList.map((lab, index) => [lab, palette[index % palette.length]]));
+                const clusterList = [...clusters.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+                const labList = [...labs.keys()].sort((a, b) => a.localeCompare(b));
+                const maxCount = Math.max(...clusterList.flatMap(([, counts]) => [...counts.values()]));
+                const table = document.createElement('table');
+                table.className = 'cluster-lab-heatmap-table';
+                table.style.tableLayout = 'fixed';
 
-                const entries = [...clusters.entries()].sort((a, b) => {
-                    const totalA = [...a[1].values()].reduce((sum, value) => sum + value, 0);
-                    const totalB = [...b[1].values()].reduce((sum, value) => sum + value, 0);
-                    return totalB - totalA;
+                const head = document.createElement('thead');
+                const headingRow = document.createElement('tr');
+                const labHeading = document.createElement('th');
+                labHeading.scope = 'col';
+                labHeading.textContent = 'Lab';
+                headingRow.appendChild(labHeading);
+                clusterList.forEach(([cluster]) => {
+                    const heading = document.createElement('th');
+                    heading.scope = 'col';
+                    heading.textContent = cluster;
+                    headingRow.appendChild(heading);
                 });
-                const max = Math.max(1, ...entries.map(([, labCounts]) =>
-                    [...labCounts.values()].reduce((sum, value) => sum + value, 0)
-                ));
+                head.appendChild(headingRow);
+                table.appendChild(head);
 
-                const active = document.createElement('div');
-                active.className = 'horizontal-year-bars';
-
-                entries.forEach(([cluster, labCounts]) => {
-                    const total = [...labCounts.values()].reduce((sum, value) => sum + value, 0);
-                    const row = document.createElement('div');
-                    row.className = 'horizontal-year-row';
-
-                    const label = document.createElement('div');
-                    label.className = 'horizontal-year-label';
-                    label.title = cluster;
-                    label.textContent = cluster;
+                const body = document.createElement('tbody');
+                labList.forEach(lab => {
+                    const row = document.createElement('tr');
+                    const label = document.createElement('th');
+                    label.scope = 'row';
+                    label.textContent = lab;
                     row.appendChild(label);
 
-                    const stack = document.createElement('div');
-                    stack.className = 'stacked-year-fill horizontal';
-
-                    labList.forEach(lab => {
-                        const value = labCounts.get(lab) || 0;
-                        if (!value) return;
-                        const segment = document.createElement('div');
-                        segment.className = 'stacked-year-segment';
-                        segment.style.flex = String(value);
-                        segment.style.background = labColors.get(lab);
-                        segment.title = `${lab}: ${value} paper${value === 1 ? '' : 's'}`;
-                        segment.innerHTML = `<span>${value}</span>`;
-                        stack.appendChild(segment);
+                    clusterList.forEach(([cluster, counts]) => {
+                        const count = counts.get(lab) || 0;
+                        const cell = document.createElement('td');
+                        const level = count ? Math.max(1, Math.ceil((count / maxCount) * 5)) : 0;
+                        cell.className = `heatmap-cell heatmap-level-${level}`;
+                        cell.textContent = count ? String(count) : '';
+                        cell.title = `${lab} · ${cluster}: ${count} paper${count === 1 ? '' : 's'}`;
+                        cell.setAttribute('aria-label', cell.title);
+                        row.appendChild(cell);
                     });
-
-                    row.appendChild(stack);
-                    const value = document.createElement('strong');
-                    value.className = 'horizontal-year-value';
-                    value.textContent = String(total);
-                    row.appendChild(value);
-                    active.appendChild(row);
+                    body.appendChild(row);
                 });
-                chart.appendChild(active);
+                table.appendChild(body);
+
+                const scroll = document.createElement('div');
+                scroll.className = 'cluster-lab-heatmap-scroll';
+                scroll.appendChild(table);
+                chart.appendChild(scroll);
 
                 const legend = document.createElement('div');
-                legend.className = 'stacked-chart-legend';
-                legend.innerHTML = labList.map(lab =>
-                    `<span><i style="background:${labColors.get(lab)}"></i>${escapeHtml(lab)}</span>`
-                ).join('');
+                legend.className = 'heatmap-legend';
+                legend.innerHTML = '<span>Fewer papers</span><i class="heatmap-level-1"></i><i class="heatmap-level-3"></i><i class="heatmap-level-5"></i><span>More papers</span>';
                 chart.appendChild(legend);
             }
         }
@@ -432,14 +385,25 @@
         function showRandomPaper() {
             if (!papersPublishedThisYear.length) return;
             const paper = papersPublishedThisYear[Math.floor(Math.random() * papersPublishedThisYear.length)];
-            const authors = paper.authors_raw ? paper.authors_raw.map(author => author.name).join(', ') : 'Unknown authors';
             const abstract = abstractText(paper);
             const titleEl = document.getElementById('random-paper-title');
             const authorsEl = document.getElementById('random-paper-authors');
             const abstractEl = document.getElementById('random-paper-abstract');
             const link = document.getElementById('random-paper-link');
             if (titleEl) titleEl.textContent = paper.label || 'Untitled paper';
-            if (authorsEl) authorsEl.textContent = authors;
+            if (authorsEl) {
+                authorsEl.replaceChildren();
+                const ugaAuthors = new Set(paper.uga_authors || []);
+                (paper.authors_raw || []).forEach((author, index) => {
+                    if (index) authorsEl.append(document.createTextNode(', '));
+                    const isUgaAuthor = ugaAuthors.has(author.id);
+                    const name = document.createElement(isUgaAuthor ? 'strong' : 'span');
+                    if (isUgaAuthor) name.className = 'uga-author-name';
+                    name.textContent = author.name || 'Unknown';
+                    authorsEl.append(name);
+                });
+                if (!paper.authors_raw || !paper.authors_raw.length) authorsEl.textContent = 'Unknown authors';
+            }
             if (abstractEl) abstractEl.textContent = abstract || 'Abstract unavailable.';
             if (link) {
                 const safeUrl = safeExternalUrl(paper.url);

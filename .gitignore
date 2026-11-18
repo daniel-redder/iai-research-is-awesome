@@ -5,3 +5,4 @@ lib/**
 **/graph_data.json
 *.pyc
 *.env
+**/settings.json
