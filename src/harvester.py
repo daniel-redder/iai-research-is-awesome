@@ -237,8 +237,7 @@ def fetch_batch(
 
             # Filter out works without any authors on the IAI roster
             if not any(
-                normalize_name(a.get("author", {}).get("display_name"))
-                in ROSTER_AUTHOR_NAMES
+                normalize_name(a.get("author", {}).get("display_name")) in ROSTER_AUTHOR_NAMES
                 for a in authorships
                 if isinstance(a, dict)
             ):
@@ -313,9 +312,7 @@ def resolve_relative_timeframe(start_relative=None, end_relative=None, now=None)
         end_date = shift_datetime_by_unit(reference_now, -end_amount, end_unit).strftime("%Y-%m-%d")
 
     if start_date and end_date and start_date > end_date:
-        raise ValueError(
-            f"Resolved start date {start_date} is after end date {end_date}."
-        )
+        raise ValueError(f"Resolved start date {start_date} is after end date {end_date}.")
 
     return start_date, end_date
 

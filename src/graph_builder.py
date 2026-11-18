@@ -369,8 +369,50 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             }
         };
 
+        function filterGraphDataByYear(data) {
+            const paperNodes = data.nodes.filter(node => node.group === 'paper');
+            const years = [...new Set(paperNodes.map(node => node.publication_date?.slice(0, 4)).filter(year => /^\\d{4}$/.test(year || '')))]
+                .sort((a, b) => Number(b) - Number(a));
+            const savedYear = localStorage.getItem('uga-selected-year');
+            const currentYear = String(new Date().getFullYear());
+            const selectedYear = years.includes(savedYear)
+                ? savedYear
+                : years.includes(currentYear) ? currentYear : years[0];
+            const selectedPapers = paperNodes.filter(node => node.publication_date?.startsWith(selectedYear));
+            const paperIds = new Set(selectedPapers.map(node => node.id));
+            const authoredEdges = data.edges.filter(edge => edge.type === 'authored' && paperIds.has(edge.to));
+            const authorsByPaper = new Map();
+            authoredEdges.forEach(edge => {
+                if (!authorsByPaper.has(edge.to)) authorsByPaper.set(edge.to, []);
+                authorsByPaper.get(edge.to).push(edge.from);
+            });
+            const authorIds = new Set(authoredEdges.map(edge => edge.from));
+            const nodes = data.nodes.filter(node =>
+                node.group === 'paper' ? paperIds.has(node.id) : node.group === 'author' && authorIds.has(node.id)
+            );
+            const citedEdges = data.edges.filter(edge =>
+                edge.type === 'cited' && paperIds.has(edge.from) && paperIds.has(edge.to)
+            );
+            const coauthorEdges = [];
+            const seenCoauthors = new Set();
+            authorsByPaper.forEach(authors => {
+                for (let i = 0; i < authors.length; i++) {
+                    for (let j = i + 1; j < authors.length; j++) {
+                        const pair = [authors[i], authors[j]].sort();
+                        const key = JSON.stringify(pair);
+                        if (!seenCoauthors.has(key)) {
+                            seenCoauthors.add(key);
+                            coauthorEdges.push({ from: pair[0], to: pair[1], type: 'coauthor' });
+                        }
+                    }
+                }
+            });
+            return { nodes, edges: [...citedEdges, ...authoredEdges, ...coauthorEdges] };
+        }
+
         fetch('graph_data.json').then(r => r.json()).then(data => {
-            allNodes = data.nodes; allEdges = data.edges;
+            const filteredData = filterGraphDataByYear(data);
+            allNodes = filteredData.nodes; allEdges = filteredData.edges;
             allNodes.forEach(n => {
                 if (n.cluster_name && !clusterMap[n.cluster_name]) {
                     clusterMap[n.cluster_name] = clusterColors[colorIndex % clusterColors.length];
@@ -964,7 +1006,9 @@ def build_interactive_graph():
                     "is_uga": author_id in uga_auth_ids,
                     "roster_status": roster_person.get("status") if roster_person else None,
                     "roster_title": roster_person.get("title") if roster_person else None,
-                    "roster_profile_url": roster_person.get("profile_url") if roster_person else None,
+                    "roster_profile_url": roster_person.get("profile_url")
+                    if roster_person
+                    else None,
                     "roster_email": roster_person.get("email") if roster_person else None,
                 }
             if author_id in uga_auth_ids:

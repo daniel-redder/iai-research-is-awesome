@@ -29,9 +29,7 @@ def resolve_authors():
         roster = []
 
     roster_by_name = {
-        person["normalized_name"]: person
-        for person in roster
-        if person.get("normalized_name")
+        person["normalized_name"]: person for person in roster if person.get("normalized_name")
     }
 
     for paper in papers:

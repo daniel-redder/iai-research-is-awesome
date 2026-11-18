@@ -104,14 +104,14 @@ def fetch_historical_roster(year: int) -> list[dict]:
                 headers={"User-Agent": "UGA-IAI-Research-Pipeline/1.0"},
             )
             if response.status_code == 429:
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
                 continue
             response.raise_for_status()
             break
         except requests.RequestException:
             if attempt == 3:
                 return []
-            time.sleep(2 ** attempt)
+            time.sleep(2**attempt)
 
     if response is None:
         return []
@@ -145,17 +145,19 @@ def fetch_historical_roster(year: int) -> list[dict]:
         email_link = card.select_one("a[href^='mailto:']")
         email = email_link.get("href", "").removeprefix("mailto:").strip() if email_link else ""
 
-        people.append({
-            "name": name,
-            "normalized_name": normalize_name(name),
-            "status": classify(title),
-            "title": title,
-            "email": email,
-            "profile_url": "",
-            "source": archived_url,
-            "first_seen_year": year,
-            "last_seen_year": year,
-        })
+        people.append(
+            {
+                "name": name,
+                "normalized_name": normalize_name(name),
+                "status": classify(title),
+                "title": title,
+                "email": email,
+                "profile_url": "",
+                "source": archived_url,
+                "first_seen_year": year,
+                "last_seen_year": year,
+            }
+        )
     return people
 
 

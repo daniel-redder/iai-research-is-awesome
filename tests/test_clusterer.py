@@ -18,5 +18,4 @@ def test_agriculture_papers_are_detected(title):
 
 
 def test_non_agriculture_paper_is_not_detected():
-    assert not is_agriculture_paper(
-        {"title": "Self-Evolving Code-with-Image Reasoning"})
+    assert not is_agriculture_paper({"title": "Self-Evolving Code-with-Image Reasoning"})

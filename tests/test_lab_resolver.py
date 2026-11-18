@@ -16,8 +16,7 @@ from src.lab_resolver import clean_lab_name, extract_labs, uga_lab_name
             "commercially relevant sustainable materials The Hoarfrost lab",
             "The Hoarfrost Lab",
         ),
-        ("and the Small Satellite Research Laboratory",
-         "The Small Satellite Research Laboratory"),
+        ("and the Small Satellite Research Laboratory", "The Small Satellite Research Laboratory"),
     ],
 )
 def test_clean_lab_name(value, expected):

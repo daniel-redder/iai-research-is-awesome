@@ -55,8 +55,7 @@ AGRICULTURE_TITLE_PATTERN = re.compile(
 
 def safe_text(value, max_len=MAX_TEXT_FIELD_LEN):
     text = value if isinstance(value, str) else ""
-    text = "".join(ch for ch in text if ch ==
-                   "\n" or ch == "\t" or ord(ch) >= 32)
+    text = "".join(ch for ch in text if ch == "\n" or ch == "\t" or ord(ch) >= 32)
     return text.strip()[:max_len]
 
 
@@ -133,16 +132,13 @@ def generate_copilot_cluster_name(tfidf_matrix, vectorizer, cluster_indices):
     similarities = cosine_similarity(cluster_center, category_matrix).ravel()
     scores = dict(zip(category_names, similarities, strict=True))
 
-    foundational_score = scores.get(
-        FOUNDATIONAL_CATEGORY, 0.0) * FOUNDATIONAL_PRIOR
-    domain_scores = {k: v for k, v in scores.items() if k !=
-                     FOUNDATIONAL_CATEGORY}
+    foundational_score = scores.get(FOUNDATIONAL_CATEGORY, 0.0) * FOUNDATIONAL_PRIOR
+    domain_scores = {k: v for k, v in scores.items() if k != FOUNDATIONAL_CATEGORY}
 
     if not domain_scores:
         return FOUNDATIONAL_CATEGORY
 
-    best_domain, best_domain_score = max(
-        domain_scores.items(), key=lambda item: item[1])
+    best_domain, best_domain_score = max(domain_scores.items(), key=lambda item: item[1])
 
     # Prefer domain-specific categories unless Foundational is clearly stronger.
     if best_domain_score >= foundational_score - DOMAIN_PREFERENCE_MARGIN:
@@ -205,8 +201,7 @@ def run_clustering():
 
     old_clusters = {name: idxs for name, idxs in old_clusters.items() if name}
 
-    centroids = {c: np.asarray(tfidf_matrix[i].mean(
-        axis=0)) for c, i in old_clusters.items()}
+    centroids = {c: np.asarray(tfidf_matrix[i].mean(axis=0)) for c, i in old_clusters.items()}
 
     unassigned_indices = []
     for idx in range(len(old_data), len(all_papers)):
@@ -227,8 +222,7 @@ def run_clustering():
         unassigned_matrix = tfidf_matrix[unassigned_indices]
         # Force multiple clusters for our demo
         k = min(3, len(unassigned_indices))
-        kmeans = KMeans(n_clusters=k, random_state=42,
-                        n_init="auto").fit(unassigned_matrix)
+        kmeans = KMeans(n_clusters=k, random_state=42, n_init="auto").fit(unassigned_matrix)
 
         for cluster_id in range(k):
             local_indices = np.where(kmeans.labels_ == cluster_id)[0]
