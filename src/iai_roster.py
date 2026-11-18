@@ -1,8 +1,8 @@
+import datetime
 import json
 import re
 import time
 from pathlib import Path
-import datetime
 
 import requests
 from bs4 import BeautifulSoup

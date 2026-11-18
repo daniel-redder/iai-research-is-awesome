@@ -11,19 +11,19 @@ def resolve_authors():
     if not os.path.exists("data/papers_raw.json"):
         return
 
-    with open("data/papers_raw.json", "r") as f:
+    with open("data/papers_raw.json") as f:
         papers = json.load(f)
 
     authors_db_path = "data/authors_master.json"
     if os.path.exists(authors_db_path):
-        with open(authors_db_path, "r") as f:
+        with open(authors_db_path) as f:
             authors_db = json.load(f)
     else:
         authors_db = {}
 
     roster_path = "data/iai_roster.json"
     if os.path.exists(roster_path):
-        with open(roster_path, "r") as f:
+        with open(roster_path) as f:
             roster = json.load(f)
     else:
         roster = []

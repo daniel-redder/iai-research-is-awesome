@@ -1,8 +1,9 @@
+from datetime import UTC, datetime
+from unittest.mock import patch
+from urllib.parse import parse_qs, urlparse
+
 import pytest
 import responses
-from unittest.mock import patch
-from datetime import datetime, timezone
-from urllib.parse import parse_qs, urlparse
 
 from src.harvester import (
     BASE_URL,
@@ -73,7 +74,7 @@ def test_openalex_failed_request_budget_exhausted(mock_sleep):
 
 
 def test_resolve_relative_timeframe_month_examples():
-    now = datetime(2026, 11, 17, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 17, tzinfo=UTC)
 
     start_date, _ = resolve_relative_timeframe(["-1", "months"], None, now)
     _, end_date = resolve_relative_timeframe(None, ["3", "months"], now)
@@ -83,7 +84,7 @@ def test_resolve_relative_timeframe_month_examples():
 
 
 def test_resolve_relative_timeframe_rejects_inverted_window():
-    now = datetime(2026, 11, 17, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 17, tzinfo=UTC)
 
     with pytest.raises(ValueError, match="after end date"):
         resolve_relative_timeframe(["-1", "months"], ["3", "months"], now)

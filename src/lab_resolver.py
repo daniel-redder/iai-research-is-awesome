@@ -14,7 +14,8 @@ LAB_NAME_PATTERN = re.compile(
     r"(?:\s+(?:[A-Z][A-Za-z0-9&/-]*|and|of|for|the|in|on|at)){0,7}"
     r"\s+(?:[Ll]ab|[Ll]aboratory|[Cc]enter|[Ii]nstitute|[Gg]roup|[Cc]linic))\b"
 )
-LAB_SUFFIX_PATTERN = re.compile(r"\b(lab|laboratory|center|institute|group|clinic)\b", re.I)
+LAB_SUFFIX_PATTERN = re.compile(
+    r"\b(lab|laboratory|center|institute|group|clinic)\b", re.I)
 LAB_NOISE_PATTERN = re.compile(
     r"\b(?:events|resources|contact|directory|fellows|industry|office|room|suite|"
     r"street|avenue|building|campus|description|vision|seminar)\b|\b\d{2,}\b",
@@ -46,9 +47,13 @@ UGA_LAB_ALIASES = {
     "AI4STEM Education Center": "AI4STEM Education Center",
     "Cox International Center": "Cox International Center",
     "Developmental Dynamics Lab": "Developmental Dynamics Lab",
-    "Design Informatics and Computational Engineering Lab": "Design Informatics and Computational Engineering Lab",
+    "Design Informatics and Computational Engineering Lab": (
+        "Design Informatics and Computational Engineering Lab"
+    ),
     "Douglass Lab": "Douglass Lab",
-    "Engineering Education Transformations Institute": "Engineering Education Transformations Institute",
+    "Engineering Education Transformations Institute": (
+        "Engineering Education Transformations Institute"
+    ),
     "Global Health Institute": "Global Health Institute",
     "HeRo Lab": "HeRo Lab",
     "Kay Ivester Institute": "Kay Ivester Institute",
@@ -62,15 +67,21 @@ UGA_LAB_ALIASES = {
     "RAIL Lab": "RAIL Lab",
     "The RAIL Lab": "RAIL Lab",
     "River Basin Center": "River Basin Center",
-    "Second Language Acquisition and Cognition Lab": "Second Language Acquisition and Cognition Lab",
+    "Second Language Acquisition and Cognition Lab": (
+        "Second Language Acquisition and Cognition Lab"
+    ),
     "Skidaway Institute": "Skidaway Institute",
     "SMART Lab": "SMART Lab",
     "Song Lab": "Song Lab",
     "The Computational Agriculture Lab": "The Computational Agriculture Lab",
-    "The Computational Multi-Modal Communication Lab": "The Computational Multi-Modal Communication Lab",
+    "The Computational Multi-Modal Communication Lab": (
+        "The Computational Multi-Modal Communication Lab"
+    ),
     "The Creativity and Imagination Lab": "The Creativity and Imagination Lab",
     "The Data-Intensive Pervasive Systems Lab": "The Data-Intensive Pervasive Systems Lab",
-    "The Evolutionary Computation and Machine Learning Laboratory": "The Evolutionary Computation and Machine Learning Laboratory",
+    "The Evolutionary Computation and Machine Learning Laboratory": (
+        "The Evolutionary Computation and Machine Learning Laboratory"
+    ),
     "The Heterogeneous Robotics Research Lab": "The Heterogeneous Robotics Research Lab",
     "The Hoarfrost Lab": "The Hoarfrost Lab",
     "The Human Factors and Aging Laboratory": "The Human Factors and Aging Laboratory",
@@ -118,7 +129,8 @@ def clean_lab_name(value: str) -> str:
         return UNCERTAIN_LAB
 
     candidate = candidates[-1].strip(" .,:;-()")
-    candidate = re.sub(r"^(?:(?:and|of|for|in|on|at)\s+)+", "", candidate, flags=re.I)
+    candidate = re.sub(r"^(?:(?:and|of|for|in|on|at)\s+)+",
+                       "", candidate, flags=re.I)
     if normalize_name(candidate) in GENERIC_LAB_NAMES or LAB_CONTEXT_PATTERN.search(candidate):
         return UNCERTAIN_LAB
 
@@ -181,7 +193,8 @@ def resolve_labs() -> None:
     for person in roster:
         labs = extract_labs(person)
         person["labs"] = labs
-        key = person.get("normalized_name") or normalize_name(person.get("name", ""))
+        key = person.get("normalized_name") or normalize_name(
+            person.get("name", ""))
         if key:
             roster_by_name[key] = labs
 
@@ -192,13 +205,15 @@ def resolve_labs() -> None:
         for paper in papers:
             paper_labs: list[str] = []
             for author in paper.get("authors", []):
-                labs = roster_by_name.get(normalize_name(author.get("name", "")), [])
+                labs = roster_by_name.get(
+                    normalize_name(author.get("name", "")), [])
                 paper_labs.extend(lab for lab in labs if lab != UNCERTAIN_LAB)
             paper["uga_labs"] = sorted(set(paper_labs))
             paper["uga_lab"] = ", ".join(paper["uga_labs"])
         PAPERS_FILE.write_text(json.dumps(papers, indent=2) + "\n")
 
-    print(f"Resolved labs for {len(roster)} roster members and updated papers.")
+    print(
+        f"Resolved labs for {len(roster)} roster members and updated papers.")
 
 
 if __name__ == "__main__":

@@ -1,12 +1,12 @@
 import json
 import os
 import re
+
 import numpy as np
 from scipy.sparse import csr_matrix
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
 
 RESEARCH_CATEGORIES = {
     "Foundational AI.": (

@@ -4,7 +4,9 @@ import os
 papers = [
     {
         "id": "W1",
-        "title": "jkl;jkl; — There Are Only Two Hard Problems: Cache, Naming, and Off-by-One Errors",
+        "title": (
+            "jkl;jkl; — There Are Only Two Hard Problems: Cache, Naming, and Off-by-One Errors"
+        ),
         "authors": [{"id": "A1", "name": "Ada J. Debugger"}],
         "uga_authors": [],
         "uga_lab": None,
@@ -13,7 +15,11 @@ papers = [
         "cluster_name": "Foundational Computing",
         "venue": "SIGBABEL",
         "publication_date": "2026-01-14",
-        "abstract": "jkl;jkl; This paper proves that every cache invalidation strategy eventually invalidates the cache invalidation strategy, and that naming remains the one function nobody can unit test.",
+        "abstract": (
+            "jkl;jkl; This paper proves that every cache invalidation strategy eventually "
+            "invalidates the cache invalidation strategy, and that naming remains the one "
+            "function nobody can unit test."
+        ),
     },
     {
         "id": "W2",
@@ -26,7 +32,11 @@ papers = [
         "cluster_name": "Foundational Computing",
         "venue": "IEEE Facepalm",
         "publication_date": "2025-11-08",
-        "abstract": "jkl;jkl; We present a no-iteration meeting protocol whose only termination condition is a calendar conflict. Empirical results include unlimited synchronization overhead.",
+        "abstract": (
+            "jkl;jkl; We present a no-iteration meeting protocol whose only termination "
+            "condition is a calendar conflict. Empirical results include unlimited "
+            "synchronization overhead."
+        ),
     },
     {
         "id": "W3",
@@ -39,7 +49,10 @@ papers = [
         "cluster_name": "Large Language Models & NLP",
         "venue": "NeurIPSter",
         "publication_date": "2026-05-21",
-        "abstract": "jkl;jkl; A transformer attends to every token except the one missing a semicolon. The resulting language model is 100% confident and 0% certain.",
+        "abstract": (
+            "jkl;jkl; A transformer attends to every token except the one missing a semicolon. "
+            "The resulting language model is 100% confident and 0% certain."
+        ),
     },
     {
         "id": "W4",
@@ -55,7 +68,11 @@ papers = [
         "cluster_name": "Autonomous Robotics",
         "venue": "ACL: And Caffeinated LeetCode",
         "publication_date": "2026-08-09",
-        "abstract": "jkl;jkl; This architecture replaces attention heads with increasingly judgmental rubber ducks. Asking the duck to explain each bug improves debugging accuracy but not the developer's dignity.",
+        "abstract": (
+            "jkl;jkl; This architecture replaces attention heads with increasingly judgmental "
+            "rubber ducks. Asking the duck to explain each bug improves debugging accuracy "
+            "but not the developer's dignity."
+        ),
     },
     {
         "id": "W5",
@@ -71,7 +88,11 @@ papers = [
         "cluster_name": "Autonomous Robotics",
         "venue": "I, Robot Proceedings",
         "publication_date": "2026-03-18",
-        "abstract": "jkl;jkl; We evaluate bipedal locomotion when the robot unexpectedly follows setup instructions. Its reward function converges to installing dependencies and rebooting.",
+        "abstract": (
+            "jkl;jkl; We evaluate bipedal locomotion when the robot unexpectedly follows "
+            "setup instructions. Its reward function converges to installing dependencies "
+            "and rebooting."
+        ),
     },
     {
         "id": "W6",
@@ -84,7 +105,11 @@ papers = [
         "cluster_name": "Autonomous Robotics",
         "venue": "SIGSTOP",
         "publication_date": "2026-09-25",
-        "abstract": "jkl;jkl; An agent learns to stop training a model at the ideal time. Its final policy is Ctrl+S, git push, close laptop, and pretend the flaky test never happened.",
+        "abstract": (
+            "jkl;jkl; An agent learns to stop training a model at the ideal time. Its final "
+            "policy is Ctrl+S, git push, close laptop, and pretend the flaky test never "
+            "happened."
+        ),
     },
     {
         "id": "W7",
@@ -97,7 +122,10 @@ papers = [
         "cluster_name": "Computational Bio-AI",
         "venue": "Nature: That's Not a Conflict",
         "publication_date": "2026-07-02",
-        "abstract": "jkl;jkl; Protein structure prediction succeeds until git encounters the branches named main and master. The alpha helix refuses to choose sides.",
+        "abstract": (
+            "jkl;jkl; Protein structure prediction succeeds until git encounters the branches "
+            "named main and master. The alpha helix refuses to choose sides."
+        ),
     },
 ]
 
