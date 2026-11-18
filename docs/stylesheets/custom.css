@@ -357,6 +357,7 @@ body::after {
     border: 1px solid var(--primary-color);
     background: var(--background-color);
     padding: 1rem;
+    contain: layout style;
 }
 
 .repo-status-card {
@@ -383,6 +384,7 @@ body::after {
 
 .dashboard-card {
     min-width: 0;
+    contain: layout style;
 }
 
 .dashboard-card h2 {
@@ -412,6 +414,7 @@ body::after {
     max-height: 150px;
     overflow-y: auto;
     margin-top: 0.5rem;
+    text-align: left;
 }
 
 .word-paper-list ul {
@@ -426,11 +429,12 @@ body::after {
 
 .cluster-year-chart {
     position: relative;
-    height: 260px;
+    height: 320px;
     display: grid;
     grid-template-columns: 18% 64% 18%;
     align-items: end;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     transition: transform 280ms ease, opacity 280ms ease;
 }
 
@@ -480,7 +484,7 @@ body::after {
 }
 
 .active-year-bars {
-    height: 220px;
+    min-height: 250px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
@@ -520,10 +524,13 @@ body::after {
 }
 
 .year-bar-label {
-    max-width: 100%;
+    max-width: 110px;
     min-height: 2.5rem;
     margin-top: 0.35rem;
-    font-size: 0.72rem;
+    font-size: 0.78rem;
+    line-height: 1.1;
+    white-space: normal;
+    word-break: break-word;
     text-align: center;
     overflow-wrap: anywhere;
 }
@@ -651,6 +658,8 @@ body::after {
     width: 100%;
     max-width: 100%;
     overflow: hidden;
+    min-height: 120px;
+    max-height: 240px;
 }
 
 .density-grid {
@@ -692,6 +701,8 @@ body::after {
     text-align: center;
     color: var(--secondary-color);
     line-height: 1.35;
+    height: auto;
+    overflow-y: auto;
 }
 
 .density-hover-detail strong {
@@ -757,28 +768,269 @@ body::after {
     color: var(--background-color);
 }
 
+/* Home dashboard widgets */
+.year-selector-widget {
+    position: relative;
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    min-height: 112px;
+    margin: 1.5rem 0;
+    padding: 1rem 1.25rem;
+    overflow: hidden;
+    border: 1px solid var(--primary-color);
+    background:
+        radial-gradient(circle at 12% 50%, color-mix(in srgb, var(--primary-color) 18%, transparent), transparent 28%),
+        linear-gradient(135deg, var(--background-color), color-mix(in srgb, var(--primary-color) 7%, var(--background-color)));
+    box-shadow: 0 14px 35px color-mix(in srgb, var(--primary-color) 14%, transparent);
+}
+
+.year-selector-kicker {
+    display: block;
+    color: var(--secondary-color);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.year-selector-copy strong {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: clamp(1.1rem, 2vw, 1.65rem);
+}
+
+.year-selector-control {
+    display: grid;
+    gap: 0.35rem;
+    text-align: left;
+}
+
+.year-selector-control span {
+    font-size: 0.78rem;
+    color: var(--secondary-color);
+}
+
+.year-selector-control select {
+    min-width: 150px;
+    height: 44px;
+    border: 1px solid var(--primary-color);
+    background: var(--background-color);
+    color: var(--primary-color);
+    padding: 0 0.75rem;
+    font: inherit;
+    font-weight: bold;
+}
+
+.year-selector-orbit {
+    position: relative;
+    width: 74px;
+    height: 74px;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 55%, transparent);
+    border-radius: 50%;
+    animation: orbit-spin 18s linear infinite;
+}
+
+.year-selector-orbit::before,
+.year-selector-orbit::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    inset: 12px;
+    border: 1px dashed var(--primary-color);
+}
+
+.year-selector-orbit::after {
+    inset: 25px;
+    background: var(--primary-color);
+}
+
+.year-selector-orbit span {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-color);
+}
+
+.year-selector-orbit span:nth-child(1) {
+    left: 4px;
+    top: 16px;
+}
+
+.year-selector-orbit span:nth-child(2) {
+    right: 5px;
+    bottom: 15px;
+}
+
+.year-selector-orbit span:nth-child(3) {
+    right: 21px;
+    top: -4px;
+}
+
+@keyframes orbit-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.stacked-year-bar {
+    width: 100px;
+    min-width: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.stacked-year-fill {
+    width: 68px;
+    display: flex;
+    flex-direction: column-reverse;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 45%, transparent);
+    box-shadow: 0 8px 18px color-mix(in srgb, var(--primary-color) 10%, transparent);
+}
+
+.stacked-year-segment {
+    min-height: 10px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 0.68rem;
+    border-top: 1px solid rgba(255, 255, 255, .45);
+}
+
+.stacked-year-segment span {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .55);
+}
+
+.stacked-chart-legend {
+    min-width: 180px;
+    max-width: 220px;
+    max-height: 260px;
+    margin-left: 1rem;
+    padding: 0.5rem;
+    overflow-y: auto;
+    border-left: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+}
+
+.stacked-chart-legend span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.25rem 0;
+    font-size: 0.72rem;
+}
+
+.stacked-chart-legend i {
+    width: 10px;
+    height: 10px;
+    flex: 0 0 10px;
+}
+
 .word-paper-list {
     height: 150px;
     max-height: 150px;
     overflow-y: auto;
-    margin-top: 0.5rem;
 }
 
-.word-paper-list ul {
-    margin: 0.25rem 0 0;
-    padding-left: 1.25rem;
+.publication-density-chart {
+    max-height: 240px;
+    overflow-y: auto;
 }
 
-.word-paper-list li {
-    line-height: 1.15;
-    margin: 0.1rem 0;
+#mkdocs-terminal-site-name {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
 }
 
-.cloud-word:hover {
-    color: #111111;
-    text-shadow:
-        -1px -1px 0 #fff,
-        1px -1px 0 #fff,
-        -1px 1px 0 #fff,
-        1px 1px 0 #fff;
+.header-year-marker {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    color: var(--font-color, #111);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    opacity: 0.9;
+}
+
+.uga-theme-dark .header-year-marker {
+    color: #fff;
+}
+
+.uga-theme-light .header-year-marker {
+    color: #111;
+}
+
+@media (max-width: 640px) {
+    .year-selector-widget {
+        grid-template-columns: 64px minmax(0, 1fr);
+    }
+
+    .year-selector-orbit {
+        width: 54px;
+        height: 54px;
+    }
+
+    .year-selector-control {
+        grid-column: 1 / -1;
+    }
+
+    .year-selector-control select {
+        width: 100%;
+    }
+}
+
+.horizontal-year-bars {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.55rem;
+    padding: 0.75rem 0.25rem;
+}
+
+.horizontal-year-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 180px) minmax(160px, 1fr) 44px;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.horizontal-year-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.78rem;
+}
+
+.stacked-year-fill.horizontal {
+    width: 100%;
+    height: 24px;
+    display: flex;
+    flex-direction: row;
+    border-radius: 3px;
+}
+
+.stacked-year-fill.horizontal .stacked-year-segment {
+    min-height: 24px;
+    border-top: 0;
+    border-right: 1px solid rgba(255, 255, 255, .45);
+}
+
+.horizontal-year-value {
+    text-align: right;
+}
+
+@media (max-width: 640px) {
+    #cluster-year-chart {
+        grid-template-columns: minmax(0, 1fr) 140px !important;
+    }
+
+    .horizontal-year-row {
+        grid-template-columns: minmax(90px, 130px) minmax(100px, 1fr) 34px;
+    }
 }

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
     <title>IAI Research Explorer</title>
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="javascripts/graph-gpu.js"></script>
     <style>
         :root {
             --g-bg: #f8f9fa;
@@ -159,6 +160,7 @@
     <div class="search-hint">Press <b>Ctrl+F</b> to search</div>
     <div id="custom-tooltip"></div>
     <div id="network"></div>
+    <canvas id="gpu-network" aria-label="GPU-accelerated research graph"></canvas>
 
     <script>
         let allNodes = []; let allEdges = [];
@@ -166,6 +168,21 @@
         let hasInitialFit = false;
         const clusterColors = ["#ff0000", "#1a73e8", "#fbbc04", "#34a853", "#8e24aa", "#ff6d00"];
         let clusterMap = {}; let labMap = {}; let colorIndex = 0; let labColorIndex = 0;
+        const tooltip = document.getElementById('custom-tooltip');
+        let tooltipAnchor = { x: 0, y: 0 };
+
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+            tooltip.innerHTML = '';
+        }
+
+        document.addEventListener('mousemove', function(e) {
+            tooltipAnchor = { x: e.pageX + 15, y: e.pageY + 15 };
+            if (tooltip.style.display === 'block') {
+                tooltip.style.left = tooltipAnchor.x + 'px';
+                tooltip.style.top = tooltipAnchor.y + 'px';
+            }
+        });
 
         // PHYSICS PARAMS
         let currentGravity = -3000;
@@ -249,19 +266,62 @@
             renderGraph();
         });
 
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            }[char]));
+        }
+
+        function safeExternalUrl(value) {
+            if (!value) return '';
+            try {
+                const parsed = new URL(String(value), window.location.origin);
+                if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                    return parsed.href;
+                }
+            } catch (error) {
+                return '';
+            }
+            return '';
+        }
+
         function formatAuthors(authorsList, ugaAuthorsList) {
             if (!authorsList) return "";
             return authorsList.map(a => 
                 ugaAuthorsList && ugaAuthorsList.includes(a.id) 
-                ? `<span class="uga-author-red">${a.name}</span>` 
-                : a.name
+                ? `<span class="uga-author-red">${escapeHtml(a.name)}</span>` 
+                : escapeHtml(a.name)
             ).join(", ");
+        }
+
+        function normalizeName(name) {
+            return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        }
+
+        function objectPageUrl(node) {
+            if (!node) return null;
+            if (currentMode === 'cluster' && node.cluster_name) {
+                return `cluster/?name=${encodeURIComponent(node.cluster_name)}`;
+            }
+            if (node.group === 'paper') {
+                return `paper/?id=${encodeURIComponent(node.id)}`;
+            }
+            if (node.group === 'author') {
+                const n = node.normalized_name || normalizeName(node.label || '');
+                return `author/?name=${encodeURIComponent(n)}&id=${encodeURIComponent(node.id)}`;
+            }
+            return null;
         }
 
         function renderGraph(filteredNodeIds = null, selectedNodeId = null) {
             const container = document.getElementById('network');
             let targetGroup = currentMode === 'author' ? 'author' : 'paper';
             let edgeType = targetGroup === 'paper' ? 'cited' : 'coauthor';
+            const isFilteredView = !!filteredNodeIds;
             
             let nodesToKeep = allNodes.filter(n => n.group === targetGroup);
             let edgesToKeep = allEdges.filter(e => e.type === edgeType);
@@ -276,9 +336,39 @@
                 for (let cName in clusterGroups) {
                     let group = clusterGroups[cName];
                     for (let i = 0; i < group.length - 1; i++) {
-                        edgesToKeep.push({ from: group[i], to: group[i+1], type: 'gravity', hidden: true, physics: true, length: 15 });
+                        edgesToKeep.push({ from: group[i], to: group[i+1], type: 'gravity', hidden: true, physics: true, length: 35, springConstant: 0.24 });
                     }
                 }
+
+                // Spread clusters apart with fixed anchor points around a circle.
+                const clusterNames = Object.keys(clusterGroups).filter(Boolean);
+                const anchorRadius = Math.max(1200, clusterNames.length * 210);
+                clusterNames.forEach((clusterName, idx) => {
+                    const angle = (2 * Math.PI * idx) / Math.max(1, clusterNames.length);
+                    const anchorId = `cluster-anchor-${idx}`;
+                    nodesToKeep.push({
+                        id: anchorId,
+                        group: 'cluster-anchor',
+                        label: '',
+                        hidden: true,
+                        physics: false,
+                        fixed: { x: true, y: true },
+                        x: Math.cos(angle) * anchorRadius,
+                        y: Math.sin(angle) * anchorRadius,
+                    });
+
+                    clusterGroups[clusterName].forEach(nodeId => {
+                        edgesToKeep.push({
+                            from: nodeId,
+                            to: anchorId,
+                            type: 'cluster-anchor',
+                            hidden: true,
+                            physics: true,
+                            length: 320,
+                            springConstant: 0.02,
+                        });
+                    });
+                });
             } else if (currentMode === 'labs') {
                 let labGroups = {};
                 nodesToKeep.forEach(n => {
@@ -325,21 +415,23 @@
                 edgesToKeep = edgesToKeep.concat(subEdges);
             }
 
+            const hideLabels = nodesToKeep.length > 10;
+
             let finalNodes = nodesToKeep.map(n => {
                 let nodeData = { ...n };
                 
                 // Tooltips
                 if (nodeData.group === 'paper') {
                     let authHtml = formatAuthors(nodeData.authors_raw, nodeData.uga_authors);
-                    let labHtml = nodeData.uga_lab ? `<br><span style="color:#ff0000;">Lab:</span> ${nodeData.uga_lab}` : '';
+                    let labHtml = nodeData.uga_lab ? `<br><span style="color:#ff0000;">Lab:</span> ${escapeHtml(nodeData.uga_lab)}` : '';
                     nodeData.hoverHtml = `
-                        <div style="font-size: 14px; margin-bottom: 6px;"><b>${nodeData.label}</b></div>
+                        <div style="font-size: 14px; margin-bottom: 6px;"><b>${escapeHtml(nodeData.label)}</b></div>
                         <div style="font-size: 12px; color:#ccc;">
                             Authors: ${authHtml} ${labHtml}
                         </div>`;
                 } else if (nodeData.group === 'author') {
                     let affil = nodeData.is_uga ? "<span class='uga-author-red'>UGA Affiliate</span>" : "<span style='color:#888;'>External</span>";
-                    nodeData.hoverHtml = `<div style="font-size: 14px;"><b>${nodeData.label}</b></div><div style="font-size:12px; margin-top:4px;">${affil}</div>`;
+                    nodeData.hoverHtml = `<div style="font-size: 14px;"><b>${escapeHtml(nodeData.label)}</b></div><div style="font-size:12px; margin-top:4px;">${affil}</div>`;
                 }
 
                 // Styling Overrides
@@ -378,6 +470,9 @@
                     nodeData.color = { background: '#ffffff', border: '#ff0000' };
                     nodeData.font = { color: '#000000', background: 'white' };
                 }
+                if (hideLabels) {
+                    nodeData.label = '';
+                }
                 return nodeData;
             });
 
@@ -387,31 +482,45 @@
                 if (e.type === 'authored') {
                     edgeData.color = { color: 'rgba(255, 0, 0, 0.3)' };
                     edgeData.dashes = true;
+                } else if (currentMode === 'cluster' && e.type === 'cited') {
+                    edgeData.physics = false;
                 } else if (!document.body.classList.contains('graph-dark')) {
                     edgeData.color = { color: '#111111', opacity: 1 };
                 }
                 return edgeData;
             });
 
+            const finalNodeMap = new Map(finalNodes.map(node => [node.id, node]));
+
+            const isAuthorMode = currentMode === 'author';
+            const baseSpringLength = currentMode === 'cluster' ? Math.max(currentSpring * 2.2, 320) : currentSpring;
+            const baseGravity = currentMode === 'cluster' ? currentGravity * 3.5 : currentGravity * 2;
+            const stabilizationIterations = isAuthorMode ? 120 : 300;
+
             const data = { nodes: new vis.DataSet(finalNodes), edges: new vis.DataSet(finalEdges) };
             const options = {
-                nodes: { shape: 'dot', font: { size: 14, face: 'monospace' }, shadow: true },
-                edges: { width: 1.5, color: { inherit: 'both' }, smooth: { type: 'continuous' } },
+                nodes: { shape: 'dot', font: { size: 14, face: 'monospace' }, shadow: !isAuthorMode },
+                edges: {
+                    width: isAuthorMode ? 1 : 1.5,
+                    color: { inherit: 'both' },
+                    smooth: isAuthorMode ? false : { type: 'continuous' }
+                },
                 interaction: { hover: true, dragNodes: true, dragView: true, zoomView: true },
                 physics: {
                     enabled: true,
                     barnesHut: {
-                        gravitationalConstant: currentGravity * 2,
-                        springLength: currentSpring,
+                        gravitationalConstant: baseGravity,
+                        springLength: baseSpringLength,
                         avoidOverlap: 2
                     },
                     solver: 'barnesHut',
-                    stabilization: { iterations: 300, fit: true }
+                    stabilization: { iterations: stabilizationIterations, fit: true }
                 }
             };
 
             if (network) network.destroy();
             network = new vis.Network(container, data, options);
+            hideTooltip();
 
             if (!physicsEnabled) {
                 network.once('stabilizationIterationsDone', function() {
@@ -430,23 +539,24 @@
             });
 
             network.on("hoverNode", function (params) {
-                const node = finalNodes.find(n => n.id === params.node);
+                const node = finalNodeMap.get(params.node);
                 if (node && node.hoverHtml) {
-                    const tooltip = document.getElementById('custom-tooltip');
                     tooltip.innerHTML = node.hoverHtml;
                     tooltip.style.display = 'block';
+                    tooltip.style.left = tooltipAnchor.x + 'px';
+                    tooltip.style.top = tooltipAnchor.y + 'px';
                 }
             });
             network.on("blurNode", function () {
-                document.getElementById('custom-tooltip').style.display = 'none';
+                hideTooltip();
             });
-            document.addEventListener('mousemove', function(e) {
-                const tooltip = document.getElementById('custom-tooltip');
-                if (tooltip.style.display === 'block') {
-                    tooltip.style.left = (e.pageX + 15) + 'px';
-                    tooltip.style.top = (e.pageY + 15) + 'px';
-                }
+            network.on("deselectNode", hideTooltip);
+            network.on("dragStart", hideTooltip);
+            network.on("zoom", hideTooltip);
+            network.on("click", function(params) {
+                if (!params.nodes || params.nodes.length === 0) hideTooltip();
             });
+            container.onmouseleave = hideTooltip;
 
             network.on("beforeDrawing", function(ctx) {
                 if (currentMode !== 'cluster' && currentMode !== 'labs') return;
@@ -489,6 +599,12 @@
             network.on("selectNode", function (params) {
                 const nodeId = params.nodes[0];
                 const selectedNode = allNodes.find(n => n.id === nodeId);
+                const destination = objectPageUrl(selectedNode);
+
+                if (!isFilteredView && destination) {
+                    window.location.href = destination;
+                    return;
+                }
                 
                 const relatedNodeIds = new Set([nodeId]);
                 allEdges.forEach(e => {
@@ -501,12 +617,13 @@
                 const header = document.getElementById('header-info');
                 if (targetGroup === 'paper' || (currentMode === 'author' && selectedNode.group === 'paper')) {
                     let auths = formatAuthors(selectedNode.authors_raw, selectedNode.uga_authors);
-                    let lab = selectedNode.uga_lab ? ` | <span style="color:#ff0000">${selectedNode.uga_lab}</span>` : '';
-                    let link = selectedNode.url ? `<a href="${selectedNode.url}" target="_blank">[View]</a>` : '';
-                    header.innerHTML = `<div style="margin-bottom: 2px;"><b>${selectedNode.label}</b> ${lab} ${link}</div> <div style="font-size:12px; color:#aaa;">By: ${auths}</div>`;
+                    let lab = selectedNode.uga_lab ? ` | <span style="color:#ff0000">${escapeHtml(selectedNode.uga_lab)}</span>` : '';
+                    let safeUrl = safeExternalUrl(selectedNode.url);
+                    let link = safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener">[View]</a>` : '';
+                    header.innerHTML = `<div style="margin-bottom: 2px;"><b>${escapeHtml(selectedNode.label)}</b> ${lab} ${link}</div> <div style="font-size:12px; color:#aaa;">By: ${auths}</div>`;
                 } else {
                     let affil = selectedNode.is_uga ? "(UGA IAI Faculty/Student)" : "(External Collaborator)";
-                    header.innerHTML = `<div><b style="color:#ff0000">${selectedNode.label}</b> ${affil}</div>`;
+                    header.innerHTML = `<div><b style="color:#ff0000">${escapeHtml(selectedNode.label)}</b> ${affil}</div>`;
                 }
 
                 // If user clicks an injected paper in author mode, switch to paper mode to view it properly
@@ -550,7 +667,7 @@
             matches.forEach(m => {
                 let div = document.createElement("div");
                 div.className = "search-item";
-                div.innerHTML = `<b>${m.label}</b><br><span style="font-size:11px; color:#aaa">${m.uga_lab || "Unknown Lab"}</span>`;
+                div.innerHTML = `<b>${escapeHtml(m.label)}</b><br><span style="font-size:11px; color:#aaa">${escapeHtml(m.uga_lab || "Unknown Lab")}</span>`;
                 div.onclick = () => {
                     currentMode = 'paper';
                     renderGraph(null, null);

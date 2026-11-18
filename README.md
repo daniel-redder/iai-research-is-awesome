@@ -1,7 +1,7 @@
 # IAI Research is Awesome!
 
-![Last Updated](https://img.shields.io/badge/Last_Updated-YYYY--MM--DD-blue)
-![Breadth](https://img.shields.io/badge/Breadth-YYYY--MM--DD_to_YYYY--MM--DD-green)
+![Last Updated](https://img.shields.io/badge/Last_Updated-2026--11--17-blue)
+![Breadth](https://img.shields.io/badge/Breadth-2026--10--15_to_2026--11--17-green)
 ## Architecture
 
 This repository runs automatically via GitHub Actions:
@@ -16,3 +16,15 @@ This repository runs automatically via GitHub Actions:
 1. Push this repository to GitHub.
 2. Enable **GitHub Pages** in your repository settings (Settings > Pages) and point it to the `/docs` folder on the `main` branch.
 3. The GitHub Action will run automatically every Monday to update the dataset and graph.
+
+## Harvester Timeframe Arguments
+
+You can run the harvester with a relative publication-date window:
+
+- `-e OFFSET UNIT`: End date relative to now as `now - OFFSET`.
+- `-s OFFSET UNIT`: Start date relative to now as `now + OFFSET`.
+
+Examples:
+
+- `python src/harvester.py -e 3 months` searches up to 3 months before today.
+- `python src/harvester.py -s -1 months` starts searching 1 month before today.

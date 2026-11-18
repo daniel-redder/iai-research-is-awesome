@@ -1,5 +1,41 @@
 (function () {
-    const stopWords = new Set("a about above after again against all am an and any are as at be because been before being below between both but by can could did do does doing down during each few for from further had has have having he her here hers herself him himself his how i if in into is it its itself just me more most my myself no nor not of off on once only or other our ours ourselves out over own same she should so some such than that the their theirs them themselves then there these they this those through to too under until up us very was we were what when where which while who whom why with you your yours yourself yourselves and also using based study model models data research work paper papers".split(/\s+/));
+    const stopWords = new Set("a about above after again against all am an and any are as at be because been before being below between both but by can could did do does doing down during each few for from further had has have having he her here hers herself him himself his how i if in into is it its itself just me more most my myself no nor not of off on once only or other our ours ourselves out over own same she should so some such than that the their theirs them themselves then there these they this those through to too under until up us very was we were what when where which while who whom why with you your yours yourself yourselves and also using based study model models data research work works paper papers across method methods existing result results framework evaluation accuracy propose design".split(/\s+/));
+
+    const commonTerms = [
+        { label: 'large language models', regex: /\blarge language models?\b/g },
+        { label: 'reinforcement learning', regex: /\breinforcement learning\b/g },
+        { label: 'multi-agent systems', regex: /\bmulti[- ]agent systems?\b/g },
+        { label: 'computer vision', regex: /\bcomputer vision\b/g },
+        { label: 'natural language processing', regex: /\bnatural language processing\b|\bnlp\b/g },
+        { label: 'knowledge graph', regex: /\bknowledge graphs?\b/g },
+        { label: 'federated learning', regex: /\bfederated learning\b/g },
+        { label: 'graph neural networks', regex: /\bgraph neural networks?\b|\bgnns?\b/g },
+        { label: 'machine learning', regex: /\bmachine learning\b/g },
+        { label: 'deep learning', regex: /\bdeep learning\b/g },
+        { label: 'generative ai', regex: /\bgenerative ai\b/g },
+        { label: 'autonomous systems', regex: /\bautonomous systems?\b/g },
+    ];
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, c => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[c]));
+    }
+
+    function safeExternalUrl(value) {
+        if (!value) return '';
+        try {
+            const url = new URL(String(value), window.location.origin);
+            if (url.protocol === 'http:' || url.protocol === 'https:') return url.href;
+        } catch (error) {
+            return '';
+        }
+        return '';
+    }
 
     function abstractText(paper) {
         const abstract = paper.abstract;
@@ -30,101 +66,170 @@
     }
 
     loadGraphData().then(data => {
-        const papers = data.nodes.filter(node => node.group === 'paper');
+        const allPapers = data.nodes.filter(node => node.group === 'paper');
+        const years = window.UGAYearFilter.availableYears(allPapers);
+        let selectedYear = window.UGAYearFilter.selectedYear(allPapers);
+
+        const yearSelector = document.getElementById('year-selector');
+        const yearSelectorLabel = document.getElementById('year-selector-label');
+        if (yearSelector) {
+            yearSelector.innerHTML = years.map(year => `<option value="${year}">${year}</option>`).join('');
+            yearSelector.value = selectedYear;
+            yearSelector.addEventListener('change', () => {
+                window.UGAYearFilter.setSelectedYear(yearSelector.value);
+                window.location.reload();
+            });
+        }
+        if (yearSelectorLabel) yearSelectorLabel.textContent = selectedYear;
+
+        function selectedPapersForYear() {
+            return allPapers.filter(paper =>
+                typeof paper.publication_date === 'string' &&
+                paper.publication_date.startsWith(selectedYear)
+            );
+        }
+
+        window.addEventListener('uga-year-change', event => {
+            selectedYear = event.detail?.year || selectedYear;
+            if (yearSelector) yearSelector.value = selectedYear;
+            if (yearSelectorLabel) yearSelectorLabel.textContent = selectedYear;
+            renderDashboard();
+        });
+
+        function renderDashboard() {
+            const papers = selectedPapersForYear();
+            renderDatabaseWidget(papers);
+            renderWordFrequency(papers);
+            renderClusterLabChart(papers);
+            renderVenueTable(papers);
+            showRandomPaper(papers);
+        }
+
+        const papersPublishedThisYear = allPapers.filter(paper =>
+            typeof paper.publication_date === 'string' &&
+            paper.publication_date.startsWith(selectedYear)
+        );
 
         const countEl = document.getElementById('repo-paper-count');
-        if (countEl) countEl.textContent = papers.length.toLocaleString();
+        if (countEl) countEl.textContent = papersPublishedThisYear.length.toLocaleString();
 
         const densityChart = document.getElementById('publication-density-chart');
         if (densityChart) {
             const countsByDate = new Map();
-            papers.forEach(paper => {
-                if (paper.publication_date) {
+            papersPublishedThisYear.forEach(paper => {
+                if (typeof paper.publication_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(paper.publication_date)) {
                     countsByDate.set(paper.publication_date, (countsByDate.get(paper.publication_date) || 0) + 1);
                 }
             });
 
-            const dates = [...countsByDate.keys()].sort();
-            if (dates.length) {
-                const start = new Date(dates[0] + 'T00:00:00');
-                const end = new Date(dates[dates.length - 1] + 'T00:00:00');
-                const cursor = new Date(start);
-                cursor.setDate(cursor.getDate() - cursor.getDay());
+            const start = new Date(`${selectedYear}-01-01T00:00:00`);
+            const end = new Date(`${selectedYear}-12-31T00:00:00`);
+            const cursor = new Date(start);
+            cursor.setDate(cursor.getDate() - cursor.getDay());
 
-                let html = '<div class="density-grid">';
-                const weeks = [];
-                while (cursor <= end) {
-                    if (cursor.getDay() === 0) weeks.push([]);
-                    const key = cursor.toISOString().slice(0, 10);
-                    const count = countsByDate.get(key) || 0;
-                    weeks[weeks.length - 1].push({ key, count });
-                    cursor.setDate(cursor.getDate() + 1);
-                }
+            let html = '<div class="density-grid">';
+            const weeks = [];
+            while (cursor <= end) {
+                if (cursor.getDay() === 0) weeks.push([]);
+                const key = cursor.toISOString().slice(0, 10);
+                const count = key.startsWith(`${selectedYear}-`) ? (countsByDate.get(key) || 0) : null;
+                weeks[weeks.length - 1].push(count === null ? null : { key, count });
+                cursor.setDate(cursor.getDate() + 1);
+            }
 
-                for (let row = 0; row < 7; row++) {
-                    for (let column = 0; column < weeks.length; column++) {
-                        const value = weeks[column][row];
-                        if (!value) html += '<i class="density-empty"></i>';
-                        else {
-                            const level = value.count === 0 ? 0 : value.count === 1 ? 2 : 4;
-                            html += `<i class="density-cell density-level-${level}" title="${value.key}: ${value.count} paper${value.count === 1 ? '' : 's'}"></i>`;
-                        }
+            for (let row = 0; row < 7; row++) {
+                for (let column = 0; column < weeks.length; column++) {
+                    const value = weeks[column][row];
+                    if (!value) html += '<i class="density-empty"></i>';
+                    else {
+                        const level = value.count === 0 ? 0 : value.count === 1 ? 2 : 4;
+                        html += `<i class="density-cell density-level-${level}" title="${value.key}: ${value.count} paper${value.count === 1 ? '' : 's'}"></i>`;
                     }
                 }
-                densityChart.innerHTML = html + '</div>';
+            }
+            densityChart.innerHTML = html + '</div>';
 
-                const densityGrid = densityChart.querySelector('.density-grid');
-                function fitDensityGrid() {
-                    if (!densityGrid) return;
-                    const availableWidth = Math.max(1, densityChart.clientWidth - 8);
-                    const weekCount = Math.max(1, weeks.length);
-                    const gap = availableWidth < 500 ? 1 : 3;
-                    const cellSize = Math.max(3, Math.floor((availableWidth - gap * (weekCount - 1)) / weekCount));
-                    const fittedSize = Math.min(10, cellSize);
-                    densityGrid.style.gridAutoColumns = `${fittedSize}px`;
-                    densityGrid.style.gridTemplateRows = `repeat(7, ${fittedSize}px)`;
-                    densityGrid.style.gap = `${gap}px`;
-                    densityGrid.style.width = 'max-content';
-                    densityGrid.querySelectorAll('.density-cell, .density-empty').forEach(cell => {
-                        cell.style.width = `${fittedSize}px`;
-                        cell.style.height = `${fittedSize}px`;
-                    });
-                }
-                fitDensityGrid();
-                if ('ResizeObserver' in window) {
-                    const observer = new ResizeObserver(fitDensityGrid);
-                    observer.observe(densityChart);
-                } else {
-                    window.addEventListener('resize', fitDensityGrid);
-                }
-
-                const detail = document.getElementById('density-hover-detail');
-                densityChart.querySelectorAll('.density-cell').forEach(cell => {
-                    const date = cell.title.split(':')[0];
-                    const matchingPapers = papers.filter(paper => paper.publication_date === date);
-                    const showDetail = () => {
-                        if (!detail) return;
-                        const titles = matchingPapers.map(paper => paper.label).join('<br>');
-                        detail.innerHTML = matchingPapers.length
-                            ? `<strong>${date}</strong> · ${matchingPapers.length} paper${matchingPapers.length === 1 ? '' : 's'}<br>${titles}`
-                            : `<strong>${date}</strong> · No papers`;
-                    };
-                    cell.setAttribute('tabindex', '0');
-                    cell.addEventListener('mouseenter', showDetail);
-                    cell.addEventListener('focus', showDetail);
-                    cell.addEventListener('mouseleave', () => { if (detail) detail.innerHTML = ''; });
-                    cell.addEventListener('blur', () => { if (detail) detail.innerHTML = ''; });
+            const densityGrid = densityChart.querySelector('.density-grid');
+            function fitDensityGrid() {
+                if (!densityGrid) return;
+                const availableWidth = Math.max(1, densityChart.clientWidth - 8);
+                const weekCount = Math.max(1, weeks.length);
+                const gap = availableWidth < 500 ? 1 : 3;
+                const cellSize = Math.max(3, Math.floor((availableWidth - gap * (weekCount - 1)) / weekCount));
+                const fittedSize = Math.min(10, cellSize);
+                densityGrid.style.gridAutoColumns = `${fittedSize}px`;
+                densityGrid.style.gridTemplateRows = `repeat(7, ${fittedSize}px)`;
+                densityGrid.style.gap = `${gap}px`;
+                densityGrid.style.width = 'max-content';
+                densityGrid.querySelectorAll('.density-cell, .density-empty').forEach(cell => {
+                    cell.style.width = `${fittedSize}px`;
+                    cell.style.height = `${fittedSize}px`;
                 });
             }
+            fitDensityGrid();
+            if ('ResizeObserver' in window) {
+                const observer = new ResizeObserver(fitDensityGrid);
+                observer.observe(densityChart);
+            } else {
+                window.addEventListener('resize', fitDensityGrid);
+            }
+
+            const detail = document.getElementById('density-hover-detail');
+            let lockedDensityDate = null;
+            densityChart.querySelectorAll('.density-cell').forEach(cell => {
+                const date = cell.title.split(':')[0];
+                const matchingPapers = papersPublishedThisYear.filter(paper => paper.publication_date === date);
+                const showDetail = () => {
+                    if (!detail) return;
+                    const titles = matchingPapers.map(paper => `<span style="display:block;text-align:left">${escapeHtml(paper.label)}</span>`).join('');
+                    detail.innerHTML = matchingPapers.length
+                        ? `<strong>${date}</strong> · ${matchingPapers.length} paper${matchingPapers.length === 1 ? '' : 's'}<br>${titles}`
+                        : `<strong>${date}</strong> · No papers`;
+                };
+                cell.setAttribute('tabindex', '0');
+                cell.addEventListener('mouseenter', () => { if (!lockedDensityDate) showDetail(); });
+                cell.addEventListener('focus', () => { if (!lockedDensityDate) showDetail(); });
+                cell.addEventListener('mouseleave', () => { if (!lockedDensityDate && detail) detail.innerHTML = ''; });
+                cell.addEventListener('blur', () => { if (!lockedDensityDate && detail) detail.innerHTML = ''; });
+                cell.addEventListener('click', () => {
+                    if (lockedDensityDate === date) {
+                        lockedDensityDate = null;
+                        cell.classList.remove('active');
+                        if (detail) detail.innerHTML = '';
+                    } else {
+                        densityChart.querySelectorAll('.density-cell.active').forEach(active => active.classList.remove('active'));
+                        lockedDensityDate = date;
+                        cell.classList.add('active');
+                        showDetail();
+                    }
+                });
+            });
         }
 
         const wordCounts = new Map();
         const wordPapers = new Map();
-        papers.forEach(paper => {
+        papersPublishedThisYear.forEach(paper => {
             const text = `${paper.label || ''} ${abstractText(paper)}`;
+            const normalizedText = text.toLowerCase().replace(/[^a-z0-9'\-\s]+/g, ' ');
             const uniqueWords = new Set();
-            text.toLowerCase().replace(/[^a-z0-9'-]+/g, ' ').split(/\s+/).forEach(word => {
+
+            commonTerms.forEach(term => {
+                const matches = normalizedText.match(term.regex);
+                if (matches && matches.length) {
+                    wordCounts.set(term.label, (wordCounts.get(term.label) || 0) + matches.length);
+                    uniqueWords.add(term.label);
+                }
+            });
+
+            normalizedText.split(/\s+/).forEach(word => {
                 word = word.replace(/^['-]+|['-]+$/g, '');
+                if (word.endsWith('ies') && word.length > 4) {
+                    word = word.slice(0, -3) + 'y';
+                } else if (word.endsWith('sses') && word.length > 5) {
+                    word = word.slice(0, -2);
+                } else if (word.endsWith('s') && word.length > 3 && !word.endsWith('ss')) {
+                    word = word.slice(0, -1);
+                }
                 if (word.length >= 3 && !stopWords.has(word)) {
                     wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
                     uniqueWords.add(word);
@@ -141,6 +246,7 @@
         const wordPaperList = document.getElementById('word-paper-list');
         if (cloud) {
             const max = topWords[0]?.[1] || 1;
+            let lockedWord = null;
             topWords.forEach(([word, count], index) => {
                 const span = document.createElement('span');
                 span.className = 'cloud-word';
@@ -149,104 +255,166 @@
                 span.style.fontSize = `${Math.round(12 * scale)}px`;
                 span.style.transform = `rotate(${index % 7 === 0 ? -4 : index % 7 === 3 ? 3 : 0}deg)`;
                 span.style.opacity = String(0.65 + 0.35 * (count / max));
-                span.addEventListener('mouseenter', () => {
+                span.setAttribute('tabindex', '0');
+
+                const showMatches = () => {
                     const matches = wordPapers.get(word) || [];
-                    wordPaperList.innerHTML = `<strong>${word}</strong> · ${matches.length} paper${matches.length === 1 ? '' : 's'}<ul>${matches.map(paper => `<li>${paper.label}</li>`).join('')}</ul>`;
+                    wordPaperList.innerHTML = `<strong>${escapeHtml(word)}</strong> · ${matches.length} paper${matches.length === 1 ? '' : 's'}<ul>${matches.map(paper => `<li style="text-align:left">${escapeHtml(paper.label)}</li>`).join('')}</ul>`;
+                    wordPaperList.style.height = '150px';
+                    wordPaperList.style.maxHeight = '150px';
+                };
+                span.addEventListener('mouseenter', () => { if (!lockedWord) showMatches(); });
+                span.addEventListener('focus', () => { if (!lockedWord) showMatches(); });
+                span.addEventListener('mouseleave', () => { if (!lockedWord) wordPaperList.innerHTML = ''; });
+                span.addEventListener('blur', () => { if (!lockedWord) wordPaperList.innerHTML = ''; });
+                span.addEventListener('click', () => {
+                    if (lockedWord === word) {
+                        lockedWord = null;
+                        span.classList.remove('active');
+                        wordPaperList.innerHTML = '';
+                        wordPaperList.style.height = '150px';
+                        wordPaperList.style.maxHeight = '150px';
+                    } else {
+                        cloud.querySelectorAll('.cloud-word.active').forEach(active => active.classList.remove('active'));
+                        lockedWord = word;
+                        span.classList.add('active');
+                        showMatches();
+                    }
                 });
-                span.addEventListener('mouseleave', () => { wordPaperList.innerHTML = ''; });
                 cloud.appendChild(span);
             });
         }
 
         const chart = document.getElementById('cluster-year-chart');
         if (chart) {
-            const datedPapers = papers.filter(paper => /^\d{4}-\d{2}-\d{2}$/.test(paper.publication_date || ''));
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            const title = document.getElementById('year-chart-title');
+            if (title) title.textContent = selectedYear;
 
-            const windows = [];
-            for (let offset = 0; offset < 5; offset++) {
-                const end = new Date(today);
-                end.setFullYear(end.getFullYear() - offset);
-                const start = new Date(end);
-                start.setFullYear(start.getFullYear() - 1);
-                start.setDate(start.getDate() + 1);
-                windows.push({
-                    start,
-                    end,
-                    label: `${start.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} – ${end.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
-                });
+            const clusters = new Map();
+            const labs = new Set();
+            const formalLabs = new Set([
+                '3d optical sensing laboratory', 'ai4stem education center',
+                'center for geospatial research', 'developmental dynamics lab',
+                'douglass lab', 'evolutionary computation and machine learning laboratory',
+                'heterogeneous robotics research lab', 'hero lab', 'hoarfrost lab',
+                'knowledge intelligence for discovery and decision making lab', 'lei zhang lab',
+                'ma lab', 'model research group', 'neurocognition science laboratory',
+                'physical activity community environment lab', 'ping ma lab', 'rail lab',
+                'second language acquisition and cognition lab', 'smart lab', 'song lab',
+                'small satellite research laboratory', 'sundaram lab', 'thinc lab',
+                'torrance center', 'virtual experiences laboratory', 'zhao research group'
+            ]);
+            function normalizeLabName(value) {
+                return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+            }
+            function canonicalLab(value) {
+                const normalized = normalizeLabName(value);
+                if (!normalized) return 'Unknown';
+                if (normalized.includes('small satellite research laboratory') || normalized.includes('ssrl')) {
+                    return 'UGA Small Satellite Research Laboratory (SSRL)';
+                }
+                if (normalized.includes('center for geospatial research') || normalized === 'cgr') {
+                    return 'Center for Geospatial Research (CGR)';
+                }
+                for (const formal of formalLabs) {
+                    if (normalized.includes(formal) || formal.includes(normalized)) {
+                        const aliases = {
+                            'ai4stem education center': 'AI4STEM Education Center',
+                            'rail lab': 'The RAIL Lab', 'thinc lab': 'THINC Lab',
+                            'hero lab': 'HeRo Lab', 'ping ma lab': 'Ping Ma Lab',
+                            'ma lab': 'The Ma Lab', 'hoarfrost lab': 'The Hoarfrost Lab',
+                            'torrance center': 'Torrance Center'
+                        };
+                        return aliases[formal] || String(value).replace(/\s+/g, ' ').trim();
+                    }
+                }
+                return 'Unknown';
             }
 
-            let windowIndex = 0;
-
-            function renderYear(direction = 0) {
-                const window = windows[windowIndex];
-                const counts = new Map();
-                datedPapers.forEach(paper => {
-                    const date = new Date(paper.publication_date + 'T00:00:00');
-                    if (date >= window.start && date <= window.end) {
-                        const cluster = paper.cluster_name || 'Unassigned';
-                        counts.set(cluster, (counts.get(cluster) || 0) + 1);
-                    }
+            papersPublishedThisYear.forEach(paper => {
+                const cluster = paper.cluster_name || 'Unassigned';
+                if (!clusters.has(cluster)) clusters.set(cluster, new Map());
+                const labNames = (paper.uga_labs && paper.uga_labs.length)
+                    ? paper.uga_labs
+                    : [paper.uga_lab || 'Unassigned lab'];
+                labNames.forEach(lab => {
+                    const cleanLab = canonicalLab(lab);
+                    labs.add(cleanLab);
+                    const labCounts = clusters.get(cluster);
+                    labCounts.set(cleanLab, (labCounts.get(cleanLab) || 0) + 1);
                 });
+            });
 
-                const entries = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-                const max = Math.max(1, ...entries.map(([, value]) => value));
-                const title = document.getElementById('year-chart-title');
-                if (title) title.textContent = window.label;
+            chart.innerHTML = '';
+            chart.style.display = 'grid';
+            chart.style.gridTemplateColumns = 'minmax(0, 1fr) 220px';
+            chart.style.alignItems = 'stretch';
 
-                chart.classList.remove('slide-left', 'slide-right');
-                void chart.offsetWidth;
-                if (direction < 0) chart.classList.add('slide-left');
-                if (direction > 0) chart.classList.add('slide-right');
-                chart.innerHTML = '';
+            if (!clusters.size) {
+                chart.innerHTML = '<div class="year-bar-empty">No papers in this year</div>';
+            } else {
+                const labList = [...labs].sort((a, b) => a.localeCompare(b));
+                const palette = ['#e03131', '#1c7ed6', '#2f9e44', '#f59f00', '#7950f2', '#0ca678', '#d6336c', '#495057'];
+                const labColors = new Map(labList.map((lab, index) => [lab, palette[index % palette.length]]));
 
-                function addYearPreview(previewWindow, side) {
-                    if (!previewWindow) return;
-                    const preview = document.createElement('div');
-                    preview.className = `year-preview ${side}`;
-                    preview.innerHTML = `<span>${previewWindow.label}</span>`;
-                    chart.appendChild(preview);
-                }
-
-                addYearPreview(windows[windowIndex + 1], 'previous-year');
+                const entries = [...clusters.entries()].sort((a, b) => {
+                    const totalA = [...a[1].values()].reduce((sum, value) => sum + value, 0);
+                    const totalB = [...b[1].values()].reduce((sum, value) => sum + value, 0);
+                    return totalB - totalA;
+                });
+                const max = Math.max(1, ...entries.map(([, labCounts]) =>
+                    [...labCounts.values()].reduce((sum, value) => sum + value, 0)
+                ));
 
                 const active = document.createElement('div');
-                active.className = 'active-year-bars';
-                if (entries.length === 0) {
-                    active.innerHTML = '<div class="year-bar-empty">No papers in this period</div>';
-                } else {
-                    entries.forEach(([cluster, value], index) => {
-                        const bar = document.createElement('div');
-                        bar.className = 'year-bar';
-                        bar.innerHTML = `<div class="year-bar-value">${value}</div><div class="year-bar-fill" style="height:${Math.max(8, 180 * value / max)}px; animation-delay:${index * 45}ms"></div><div class="year-bar-label">${cluster}</div>`;
-                        active.appendChild(bar);
+                active.className = 'horizontal-year-bars';
+
+                entries.forEach(([cluster, labCounts]) => {
+                    const total = [...labCounts.values()].reduce((sum, value) => sum + value, 0);
+                    const row = document.createElement('div');
+                    row.className = 'horizontal-year-row';
+
+                    const label = document.createElement('div');
+                    label.className = 'horizontal-year-label';
+                    label.title = cluster;
+                    label.textContent = cluster;
+                    row.appendChild(label);
+
+                    const stack = document.createElement('div');
+                    stack.className = 'stacked-year-fill horizontal';
+
+                    labList.forEach(lab => {
+                        const value = labCounts.get(lab) || 0;
+                        if (!value) return;
+                        const segment = document.createElement('div');
+                        segment.className = 'stacked-year-segment';
+                        segment.style.flex = String(value);
+                        segment.style.background = labColors.get(lab);
+                        segment.title = `${lab}: ${value} paper${value === 1 ? '' : 's'}`;
+                        segment.innerHTML = `<span>${value}</span>`;
+                        stack.appendChild(segment);
                     });
-                }
+
+                    row.appendChild(stack);
+                    const value = document.createElement('strong');
+                    value.className = 'horizontal-year-value';
+                    value.textContent = String(total);
+                    row.appendChild(value);
+                    active.appendChild(row);
+                });
                 chart.appendChild(active);
 
-                addYearPreview(windows[windowIndex - 1], 'next-year');
-
-                const previous = document.getElementById('year-chart-prev');
-                const next = document.getElementById('year-chart-next');
-                if (previous) previous.disabled = windowIndex >= windows.length - 1;
-                if (next) next.disabled = windowIndex <= 0;
+                const legend = document.createElement('div');
+                legend.className = 'stacked-chart-legend';
+                legend.innerHTML = labList.map(lab =>
+                    `<span><i style="background:${labColors.get(lab)}"></i>${escapeHtml(lab)}</span>`
+                ).join('');
+                chart.appendChild(legend);
             }
-
-            const previous = document.getElementById('year-chart-prev');
-            const next = document.getElementById('year-chart-next');
-            if (previous) previous.addEventListener('click', () => {
-                if (windowIndex < windows.length - 1) { windowIndex++; renderYear(-1); }
-            });
-            if (next) next.addEventListener('click', () => {
-                if (windowIndex > 0) { windowIndex--; renderYear(1); }
-            });
-            renderYear();
         }
 
         const venueCounts = new Map();
-        papers.forEach(paper => {
+        papersPublishedThisYear.forEach(paper => {
             const venue = paper.venue && paper.venue !== 'Unknown' ? paper.venue : 'Unknown / Not listed';
             venueCounts.set(venue, (venueCounts.get(venue) || 0) + 1);
         });
@@ -256,17 +424,14 @@
             venueBody.innerHTML = venueRows.length
                 ? venueRows.map(([venue, count]) => {
                     const safeVenue = venue.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                    const venueLink = venue === 'Unknown / Not listed'
-                        ? safeVenue
-                        : `<a href="https://www.google.com/search?q=${encodeURIComponent(venue)}" target="_blank" rel="noopener">${safeVenue}</a>`;
-                    return `<tr><td>${venueLink}</td><td>${count}</td></tr>`;
+                    return `<tr><td>${safeVenue}</td><td>${count}</td></tr>`;
                 }).join('')
                 : '<tr><td colspan="2">No publication venues available.</td></tr>';
         }
 
         function showRandomPaper() {
-            if (!papers.length) return;
-            const paper = papers[Math.floor(Math.random() * papers.length)];
+            if (!papersPublishedThisYear.length) return;
+            const paper = papersPublishedThisYear[Math.floor(Math.random() * papersPublishedThisYear.length)];
             const authors = paper.authors_raw ? paper.authors_raw.map(author => author.name).join(', ') : 'Unknown authors';
             const abstract = abstractText(paper);
             const titleEl = document.getElementById('random-paper-title');
@@ -277,8 +442,9 @@
             if (authorsEl) authorsEl.textContent = authors;
             if (abstractEl) abstractEl.textContent = abstract || 'Abstract unavailable.';
             if (link) {
-                if (paper.url) {
-                    link.href = paper.url;
+                const safeUrl = safeExternalUrl(paper.url);
+                if (safeUrl) {
+                    link.href = safeUrl;
                     link.style.display = 'inline-block';
                 } else {
                     link.style.display = 'none';

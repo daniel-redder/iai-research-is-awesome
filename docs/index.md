@@ -12,6 +12,20 @@ I made this tool for IAI's use, but it is not officially sponsored or endorsed b
 
 ----
 
+<div class="year-selector-widget" id="year-selector-widget" aria-label="Choose publication year">
+  <div class="year-selector-orbit" aria-hidden="true">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="year-selector-copy">
+    <span class="year-selector-kicker">Research timeline</span>
+    <strong>Explore <span id="year-selector-label">the selected year</span></strong>
+  </div>
+  <label class="year-selector-control">
+    <span>Publication year</span>
+    <select id="year-selector" aria-label="Publication year"></select>
+  </label>
+</div>
+
 <div class="repo-status-grid">
   <div class="repo-status-card database-search-card">
     <div class="database-search-summary">
@@ -20,7 +34,7 @@ I made this tool for IAI's use, but it is not officially sponsored or endorsed b
         <strong id="repo-commit-date">2026-11-17</strong>
       </div>
       <div>
-        <span class="repo-status-label">Papers logged</span>
+        <span class="repo-status-label">Papers published in selected year</span>
         <strong id="repo-paper-count">Loading…</strong>
       </div>
     </div>
@@ -37,12 +51,7 @@ I made this tool for IAI's use, but it is not officially sponsored or endorsed b
   </section>
 
   <section class="dashboard-card">
-    <h2>Papers by Cluster and Year</h2>
-    <div class="year-chart-controls">
-      <button id="year-chart-prev" type="button" aria-label="Previous year">&lt;</button>
-      <strong id="year-chart-title"></strong>
-      <button id="year-chart-next" type="button" aria-label="Next year">&gt;</button>
-    </div>
+    <h2>Papers by Cluster and Lab</h2>
     <div id="cluster-year-chart" class="cluster-year-chart" aria-label="Bar chart of papers by cluster"></div>
   </section>
 

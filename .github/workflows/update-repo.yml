@@ -1,51 +1,53 @@
-name: IAI Research Pipeline
+name: Daily Repository Update
+
 on:
   schedule:
-    - cron: '0 8 * * *'
+    - cron: "0 8 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
-# jobs:
-#   update-papers:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v3
+jobs:
+  update-papers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-#       - name: Set up uv
-#         uses: astral-sh/setup-uv@v3
-#         with:
-#           version: "latest"
-#           enable-cache: true
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-#       - name: Set up Python
-#         uses: actions/setup-python@v4
-#         with:
-#           python-version: '3.12'
+      - name: Set up Python
+        run: uv python install 3.12
 
-#       - name: Install Dependencies
-#         run: uv sync
+      - name: Install Dependencies
+        run: uv sync --group dev
 
-#       - name: Run Harvester
-#         env:
-#           POLITE_EMAIL: ${{ secrets.POLITE_EMAIL }}
-#         run: uv run python src/harvester.py
+      - name: Run Harvester
+        env:
+          POLITE_EMAIL: ${{ secrets.POLITE_EMAIL }}
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
+        run: uv run python src/harvester.py
 
-#       - name: Run Author Resolver
-#         run: uv run python src/author_resolver.py
+      - name: Run Author Resolver
+        run: uv run python src/author_resolver.py
 
-#       - name: Run Clustering
-#         run: uv run python src/clusterer.py
+      - name: Run Clustering
+        run: uv run python src/clusterer.py
 
-#       - name: Build Graph
-#         run: uv run python src/graph_builder.py
+      - name: Build Graph
+        run: uv run python src/graph_builder.py
 
-#       - name: Commit and Push Data
-#         run: |
-#           git config --local user.email "action@github.com"
-#           git config --local user.name "GitHub Action"
-#           git add data/ docs/ README.md
-#           git commit -m "Daily update: expanded paper horizon" || echo "No changes to commit"
-#           git push
+      - name: Build Documentation
+        run: uv run mkdocs build
+
+      - name: Commit and Push Data
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/ docs/ README.md
+          git diff --cached --quiet || git commit -m "Daily update: expanded paper horizon"
+          git push

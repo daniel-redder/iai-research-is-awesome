@@ -1,35 +1,45 @@
 name: CI/CD Tests
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v5
         with:
-          version: "latest"
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
 
       - name: Install Dependencies
-        run: uv sync
+        run: uv sync --group dev
 
-      - name: Generate Temporal Toy Data
-        # Simulates the existence of historical data and newly harvested daily data
+      - name: Generate Toy Data
         run: uv run python tests/generate_toy_data.py
 
-      - name: Execute Incremental Clustering Engine
-        # Respects old clusters, assigns close matches, spawns/names new clusters
-        run: uv run python src/cluster_papers.py
+      - name: Check Python formatting
+        run: uv run ruff format --check src tests
 
-      - name: Build Interactive Vis.js App
-        # Injects the finalized data into the standalone HTML app
+      - name: Lint Python scripts
+        run: uv run ruff check src tests
+
+      - name: Run unit tests
+        run: uv run pytest -q
+
+      - name: Build Graph
         run: uv run python src/graph_builder.py
 
-      - name: Build Documentation (Strict Mode)
-        # Fails CI if themes, assets (IAI logo), or HTML embeds are missing
+      - name: Build Documentation
         run: uv run mkdocs build --strict

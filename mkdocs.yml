@@ -10,4 +10,5 @@ extra_css:
   - stylesheets/custom.css
 extra_javascript:
   - javascripts/theme-toggle.js
+  - javascripts/year-filter.js
   - javascripts/dashboard.js

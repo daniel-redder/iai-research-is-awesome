@@ -91,6 +91,15 @@
         if (logo) {
             logo.innerHTML = "IAI@UGA<br>Research is<br>Awesome!";
         }
+
+        var siteName = document.querySelector("#mkdocs-terminal-site-name");
+        if (siteName && !document.querySelector(".header-year-marker")) {
+            var yearMarker = document.createElement("span");
+            yearMarker.className = "header-year-marker";
+            yearMarker.textContent = window.localStorage.getItem("uga-selected-year") || String(new Date().getFullYear());
+            yearMarker.setAttribute("aria-label", "Selected publication year");
+            siteName.insertBefore(yearMarker, siteName.firstChild);
+        }
     });
 
     var media = window.matchMedia("(prefers-color-scheme: dark)");

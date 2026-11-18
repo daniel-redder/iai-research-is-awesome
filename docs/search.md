@@ -28,6 +28,14 @@
 </div>
 
 <script>
+function normalizeName(name) {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
 async function loadSearchData() {
   const candidates = [
     new URL('../graph_data.json', window.location.href),
@@ -44,7 +52,12 @@ async function loadSearchData() {
 
 loadSearchData()
   .then(data => {
-    const papers = data.nodes.filter(n => n.group === 'paper');
+    const selectedYear = localStorage.getItem('uga-selected-year') || String(new Date().getFullYear());
+    const papers = data.nodes.filter(n =>
+      n.group === 'paper' &&
+      typeof n.publication_date === 'string' &&
+      n.publication_date.startsWith(selectedYear)
+    );
     const tbody = document.getElementById('pub-tbody');
     
     function renderTable(filterText = "") {
@@ -55,7 +68,7 @@ loadSearchData()
         const filtered = papers.filter(p => {
             if (!q) return true;
             const authorStr = p.authors_raw ? p.authors_raw.map(a => a.name).join(', ') : '';
-            const labStr = p.uga_lab || 'N/A';
+            const labStr = (p.uga_labs && p.uga_labs.length) ? p.uga_labs.join(', ') : (p.uga_lab || 'N/A');
             const clusterStr = p.cluster_name || 'Unassigned';
             const searchBlob = `${p.label} ${authorStr} ${labStr} ${clusterStr}`.toLowerCase();
             return searchBlob.includes(q);
@@ -65,16 +78,27 @@ loadSearchData()
         const toShow = filtered.slice(0, 100);
         
         toShow.forEach(p => {
-            const authorStr = p.authors_raw ? p.authors_raw.map(a => a.name).join(', ') : '';
-            const labStr = p.uga_lab || 'N/A';
-            const clusterStr = p.cluster_name || 'Unassigned';
+            const ugaIds = new Set(p.uga_authors || []);
+            const authorStr = p.authors_raw ? p.authors_raw.map(a => {
+                const name = String(a.name || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const href = `author/?name=${encodeURIComponent(normalizeName(a.name || ''))}&id=${encodeURIComponent(a.id || '')}`;
+            const linked = `<a href="${href}">${name}</a>`;
+            return ugaIds.has(a.id) ? `<span style="color:#ff0000;font-weight:bold">${linked}</span>` : linked;
+            }).join(', ') : '';
+          const safeLabel = escapeHtml(p.label || 'Untitled');
+          const labStr = (p.uga_labs && p.uga_labs.length) ? p.uga_labs.join(', ') : (p.uga_lab || 'N/A');
+          const safeLab = escapeHtml(labStr);
+          const clusterStr = p.cluster_name || 'Unassigned';
+          const safeCluster = escapeHtml(clusterStr);
+          const clusterHref = `cluster/?name=${encodeURIComponent(clusterStr)}`;
+          const paperHref = `paper/?id=${encodeURIComponent(p.id || '')}`;
             
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td style="padding: 10px; border: 1px solid #444;"><a href="${p.url}" target="_blank" style="color:var(--primary-color, #ff0000); text-decoration:underline; opacity:1;">${p.label}</a></td>
+          <td style="padding: 10px; border: 1px solid #444;"><a href="${paperHref}" style="color:var(--primary-color, #ff0000); text-decoration:underline; opacity:1;">${safeLabel}</a></td>
                 <td style="padding: 10px; border: 1px solid #444;">${authorStr}</td>
-                <td style="padding: 10px; border: 1px solid #444;">${labStr}</td>
-                <td style="padding: 10px; border: 1px solid #444;">${clusterStr}</td>
+            <td style="padding: 10px; border: 1px solid #444;">${safeLab}</td>
+          <td style="padding: 10px; border: 1px solid #444;"><a href="${clusterHref}">${safeCluster}</a></td>
             `;
             tbody.appendChild(tr);
         });
