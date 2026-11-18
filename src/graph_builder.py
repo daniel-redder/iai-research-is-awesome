@@ -17,8 +17,7 @@ MAX_REFS_PER_PAPER = 3000
 
 def safe_text(value, max_len=MAX_TEXT_LEN):
     text = value if isinstance(value, str) else ""
-    text = "".join(ch for ch in text if ch ==
-                   "\n" or ch == "\t" or ord(ch) >= 32)
+    text = "".join(ch for ch in text if ch == "\n" or ch == "\t" or ord(ch) >= 32)
     return text.strip()[:max_len]
 
 
@@ -80,8 +79,7 @@ def sanitize_author_list(authors):
         if not isinstance(author, dict):
             continue
         author_id = safe_identifier(author.get("id"))
-        author_name = safe_text(author.get(
-            "name"), max_len=200) or "Unknown author"
+        author_name = safe_text(author.get("name"), max_len=200) or "Unknown author"
         sanitized.append({"id": author_id, "name": author_name})
     return sanitized
 
@@ -943,8 +941,7 @@ def build_interactive_graph():
 
         uga_authors_raw = p.get("uga_authors", [])
         if isinstance(uga_authors_raw, list):
-            uga_authors = [aid for aid in (
-                safe_identifier(x) for x in uga_authors_raw) if aid]
+            uga_authors = [aid for aid in (safe_identifier(x) for x in uga_authors_raw) if aid]
         else:
             uga_authors = []
         uga_authors = sorted(set(uga_authors), key=str)
@@ -952,8 +949,7 @@ def build_interactive_graph():
         uga_labs_raw = p.get("uga_labs", [])
         if isinstance(uga_labs_raw, list):
             uga_labs = [safe_text(lab, max_len=200) for lab in uga_labs_raw]
-            uga_labs = sorted(
-                {lab for lab in uga_labs if lab in known_uga_labs})
+            uga_labs = sorted({lab for lab in uga_labs if lab in known_uga_labs})
         else:
             uga_labs = []
 
@@ -992,8 +988,7 @@ def build_interactive_graph():
             valid_auths.append({"id": author_id, "name": author_name})
 
             # NEW: Log authored edges so we can display papers in Author mode
-            edges.append(
-                {"from": author_id, "to": paper_id, "type": "authored"})
+            edges.append({"from": author_id, "to": paper_id, "type": "authored"})
             if author_id not in author_nodes:
                 normalized = normalize_name(author_name)
                 roster_person = roster_by_name.get(normalized)
@@ -1016,12 +1011,10 @@ def build_interactive_graph():
 
         for i in range(len(valid_auths)):
             for j in range(i + 1, len(valid_auths)):
-                pair = tuple(
-                    sorted([valid_auths[i]["id"], valid_auths[j]["id"]]))
+                pair = tuple(sorted([valid_auths[i]["id"], valid_auths[j]["id"]]))
                 if pair not in coauthors:
                     coauthors.add(pair)
-                    edges.append(
-                        {"from": pair[0], "to": pair[1], "type": "coauthor"})
+                    edges.append({"from": pair[0], "to": pair[1], "type": "coauthor"})
 
     nodes.extend(list(author_nodes.values()))
     os.makedirs("docs", exist_ok=True)
