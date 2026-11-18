@@ -18,12 +18,10 @@ STATE_FILE = "data/harvest_state.json"
 DATA_FILE = "data/papers_raw.json"
 POLITE_EMAIL = os.environ.get("POLITE_EMAIL", "default@example.com")
 OPENALEX_API_KEY = os.environ.get("OPENALEX_API_KEY")
-OPENALEX_INSTITUTION_ID = os.environ.get(
-    "OPENALEX_INSTITUTION_ID", "I165733156")
+OPENALEX_INSTITUTION_ID = os.environ.get("OPENALEX_INSTITUTION_ID", "I165733156")
 OPENALEX_CONCEPT_ID = os.environ.get("OPENALEX_CONCEPT_ID", "C41008148")
 MAX_REQUESTS_PER_RUN = int(os.environ.get("OPENALEX_MAX_REQUESTS", "8"))
-MAX_FAILED_REQUESTS_PER_RUN = int(
-    os.environ.get("OPENALEX_MAX_FAILED_REQUESTS", "25"))
+MAX_FAILED_REQUESTS_PER_RUN = int(os.environ.get("OPENALEX_MAX_FAILED_REQUESTS", "25"))
 MAX_RETRIES = int(os.environ.get("OPENALEX_MAX_RETRIES", "5"))
 REQUEST_TIMEOUT_SECONDS = int(os.environ.get("OPENALEX_TIMEOUT_SECONDS", "30"))
 
@@ -38,8 +36,7 @@ MAX_ABSTRACT_POSITION = 50000
 def safe_text(value, max_len=MAX_TEXT_FIELD_LEN):
     text = value if isinstance(value, str) else ""
     # Strip control characters while preserving whitespace needed for readability.
-    text = "".join(ch for ch in text if ch ==
-                   "\n" or ch == "\t" or ord(ch) >= 32)
+    text = "".join(ch for ch in text if ch == "\n" or ch == "\t" or ord(ch) >= 32)
     text = text.strip()
     return text[:max_len]
 
@@ -91,8 +88,7 @@ def sanitize_authorships(authorships):
             continue
         author_id = safe_identifier(author.get("id"))
         author_name = safe_text(author.get("display_name"), max_len=200)
-        authors.append(
-            {"id": author_id, "name": author_name or "Unknown author"})
+        authors.append({"id": author_id, "name": author_name or "Unknown author"})
     return authors
 
 
@@ -245,8 +241,7 @@ def fetch_batch(
 
             # Filter out works without any authors on the IAI roster
             if not any(
-                normalize_name(a.get("author", {}).get(
-                    "display_name")) in ROSTER_AUTHOR_NAMES
+                normalize_name(a.get("author", {}).get("display_name")) in ROSTER_AUTHOR_NAMES
                 for a in authorships
                 if isinstance(a, dict)
             ):
@@ -288,14 +283,12 @@ def shift_datetime_by_unit(base_datetime, value, unit):
     if normalized_unit == "year":
         return shift_datetime_by_unit(base_datetime, value * 12, "month")
     if normalized_unit != "month":
-        raise ValueError(
-            "Unsupported unit. Use days, weeks, months, or years.")
+        raise ValueError("Unsupported unit. Use days, weeks, months, or years.")
 
     month_index = (base_datetime.month - 1) + value
     target_year = base_datetime.year + (month_index // 12)
     target_month = (month_index % 12) + 1
-    target_day = min(base_datetime.day, calendar.monthrange(
-        target_year, target_month)[1])
+    target_day = min(base_datetime.day, calendar.monthrange(target_year, target_month)[1])
 
     return base_datetime.replace(year=target_year, month=target_month, day=target_day)
 
@@ -320,12 +313,10 @@ def resolve_relative_timeframe(start_relative=None, end_relative=None, now=None)
     if end_relative:
         end_amount = int(end_relative[0])
         end_unit = end_relative[1]
-        end_date = shift_datetime_by_unit(
-            reference_now, -end_amount, end_unit).strftime("%Y-%m-%d")
+        end_date = shift_datetime_by_unit(reference_now, -end_amount, end_unit).strftime("%Y-%m-%d")
 
     if start_date and end_date and start_date > end_date:
-        raise ValueError(
-            f"Resolved start date {start_date} is after end date {end_date}.")
+        raise ValueError(f"Resolved start date {start_date} is after end date {end_date}.")
 
     return start_date, end_date
 
@@ -347,8 +338,7 @@ def run_daily_harvest(start_date=None, end_date=None):
     forward_cursor = start_date or state["forward_cursor"]
     backward_cursor = end_date or state["backward_cursor"]
 
-    print(
-        f"Starting harvest. Forward cursor: {forward_cursor}, Backward cursor: {backward_cursor}")
+    print(f"Starting harvest. Forward cursor: {forward_cursor}, Backward cursor: {backward_cursor}")
 
     # Load existing papers
     if os.path.exists(DATA_FILE):
@@ -359,8 +349,7 @@ def run_daily_harvest(start_date=None, end_date=None):
     else:
         existing_papers = []
 
-    existing_ids = {p.get("id") for p in existing_papers if isinstance(
-        p, dict) and p.get("id")}
+    existing_ids = {p.get("id") for p in existing_papers if isinstance(p, dict) and p.get("id")}
 
     # Fetch 500 forward and 500 backward
     try:
@@ -414,10 +403,8 @@ def run_daily_harvest(start_date=None, end_date=None):
 
     update_readme_badges(state["backward_cursor"], state["forward_cursor"])
 
-    print(
-        f"Harvest complete. Added {new_papers} new papers. Total: {len(existing_papers)}.")
-    print(
-        f"New cursors -> Forward: {new_fwd_cursor}, Backward: {new_bwd_cursor}")
+    print(f"Harvest complete. Added {new_papers} new papers. Total: {len(existing_papers)}.")
+    print(f"New cursors -> Forward: {new_fwd_cursor}, Backward: {new_bwd_cursor}")
 
 
 def update_readme_badges(backward_cursor, forward_cursor):
@@ -433,8 +420,7 @@ def update_readme_badges(backward_cursor, forward_cursor):
     safe_forward = forward_cursor.replace("-", "--")
 
     # Regex replace the badges
-    content = re.sub(r"Last_Updated-.*?-blue",
-                     f"Last_Updated-{today_str}-blue", content)
+    content = re.sub(r"Last_Updated-.*?-blue", f"Last_Updated-{today_str}-blue", content)
     content = re.sub(
         r"Breadth-.*?-green", f"Breadth-{safe_backward}_to_{safe_forward}-green", content
     )
@@ -474,8 +460,7 @@ def openalex_get(params, request_counter, failed_request_counter=None, retry_cou
     except requests.RequestException as error:
         failed_counter["count"] += 1
         if retry_count >= MAX_RETRIES:
-            raise RuntimeError(
-                "OpenAlex request failed after retries") from error
+            raise RuntimeError("OpenAlex request failed after retries") from error
         delay = min(60, (2**retry_count) + random.uniform(0, 1))
         print(
             "DEBUG OpenAlexBackoff "
@@ -521,8 +506,7 @@ def openalex_get(params, request_counter, failed_request_counter=None, retry_cou
         return openalex_get(params, request_counter, failed_counter, retry_count + 1)
 
     if response.status_code in (401, 403, 402):
-        raise RuntimeError(
-            "OpenAlex authentication or API budget denied; run aborted")
+        raise RuntimeError("OpenAlex authentication or API budget denied; run aborted")
 
     response.raise_for_status()
     return response.json()
@@ -558,5 +542,4 @@ if __name__ == "__main__":
     except ValueError as error:
         raise SystemExit(f"Invalid date window arguments: {error}") from error
 
-    run_daily_harvest(start_date=resolved_start_date,
-                      end_date=resolved_end_date)
+    run_daily_harvest(start_date=resolved_start_date, end_date=resolved_end_date)
