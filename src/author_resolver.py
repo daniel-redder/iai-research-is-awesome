@@ -21,6 +21,17 @@ def resolve_authors():
     else:
         authors_db = {}
 
+    # Recompute counts from scratch each run so reruns are idempotent.
+    for author_id, author_data in authors_db.items():
+        if not isinstance(author_data, dict):
+            authors_db[author_id] = {
+                "name": "Unknown",
+                "status": "Uncertain",
+                "paper_count": 0,
+            }
+            continue
+        author_data["paper_count"] = 0
+
     roster_path = "data/iai_roster.json"
     if os.path.exists(roster_path):
         with open(roster_path) as f:
