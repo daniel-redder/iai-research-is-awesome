@@ -39,6 +39,18 @@
         return '';
     }
 
+    function detailPageUrl(pageName, params) {
+        const url = new URL(`${pageName}/`, window.location.href);
+        if (params && typeof params === 'object') {
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && String(value).length > 0) {
+                    url.searchParams.set(key, String(value));
+                }
+            });
+        }
+        return url.toString();
+    }
+
     function abstractText(paper) {
         const abstract = paper.abstract;
         if (typeof abstract === 'string') return abstract;
@@ -50,6 +62,33 @@
             return words.filter(Boolean).join(' ');
         }
         return paper.label || '';
+    }
+
+    function internetIconMarkup() {
+        return '<svg class="paper-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M3 12h18M12 3a14 14 0 0 0 0 18M12 3a14 14 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>';
+    }
+
+    function summarizeAuthors(paper) {
+        const names = (paper.authors_raw || []).map(author => author?.name).filter(Boolean);
+        if (!names.length) return 'Unknown authors';
+        const preview = names.slice(0, 3).join(', ');
+        return names.length > 3 ? `${preview}, et. al.` : preview;
+    }
+
+    function renderPaperList(title, papers) {
+        if (!papers.length) {
+            return `<div class="paper-list-header"><strong>${escapeHtml(title)}</strong></div><p class="paper-list-empty">No papers</p>`;
+        }
+        const rows = papers.map(paper => {
+            const safeTitle = escapeHtml(paper.label || 'Untitled paper');
+            const safeAuthors = escapeHtml(summarizeAuthors(paper));
+            const detailUrl = detailPageUrl('paper', { id: paper.id });
+            const titleMarkup = paper.id
+                ? `<a class="paper-list-link" href="${detailUrl}">${internetIconMarkup()}<span>${safeTitle}</span></a>`
+                : `<span class="paper-list-link is-disabled">${internetIconMarkup()}<span>${safeTitle}</span></span>`;
+            return `<article class="paper-list-item">${titleMarkup}<div class="paper-list-authors">${safeAuthors}</div></article>`;
+        }).join('');
+        return `<div class="paper-list-header"><strong>${escapeHtml(title)}</strong></div><div class="paper-list-items">${rows}</div>`;
     }
 
     async function loadGraphData() {
@@ -183,10 +222,8 @@
                 const matchingPapers = papersPublishedThisYear.filter(paper => paper.publication_date === date);
                 const showDetail = () => {
                     if (!detail) return;
-                    const titles = matchingPapers.map(paper => `<span style="display:block;text-align:left">${escapeHtml(paper.label)}</span>`).join('');
-                    detail.innerHTML = matchingPapers.length
-                        ? `<strong>${date}</strong> · ${matchingPapers.length} paper${matchingPapers.length === 1 ? '' : 's'}<br>${titles}`
-                        : `<strong>${date}</strong> · No papers`;
+                    const headline = `${date} · ${matchingPapers.length} paper${matchingPapers.length === 1 ? '' : 's'}`;
+                    detail.innerHTML = renderPaperList(headline, matchingPapers);
                 };
                 cell.setAttribute('tabindex', '0');
                 cell.addEventListener('mouseenter', () => { if (!lockedDensityDate) showDetail(); });
@@ -261,7 +298,8 @@
 
                 const showMatches = () => {
                     const matches = wordPapers.get(word) || [];
-                    wordPaperList.innerHTML = `<strong>${escapeHtml(word)}</strong> · ${matches.length} paper${matches.length === 1 ? '' : 's'}<ul>${matches.map(paper => `<li style="text-align:left">${escapeHtml(paper.label)}</li>`).join('')}</ul>`;
+                    const headline = `${word} · ${matches.length} paper${matches.length === 1 ? '' : 's'}`;
+                    wordPaperList.innerHTML = renderPaperList(headline, matches);
                     wordPaperList.style.height = '150px';
                     wordPaperList.style.maxHeight = '150px';
                 };

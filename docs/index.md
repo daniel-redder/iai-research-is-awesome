@@ -1,17 +1,5 @@
 # Welcome to an incomplete overview of Institute for AI research at the University of Georgia!
 
-This tool queries the OpenAlex database to collate research published by faculty/affiliates/core member of the institute for artificial intelligence. This database updates every day. If you find an incorrect or missing listing please submit an issue on this repository.
-
-On this page, I show cool summary plots over AI research at UGA. Specific papers can be found through **search** or via the **graph** explorer.
-
-I made this tool for IAI's use, but it is not officially sponsored or endorsed by them. Look on Google Scholar, Open Alex, or lab websites directly for more up-to-date information.
-
-
-
-<!-- <iframe id="graph-frame" src="graph_app.html" width="100%" height="600px" style="border:1px solid #e8eaed; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></iframe>  -->
-
-----
-
 <div class="repo-status-grid">
   <div class="repo-status-card database-search-card">
     <div class="database-search-summary">

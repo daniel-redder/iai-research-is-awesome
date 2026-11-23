@@ -5,6 +5,7 @@ theme:
   palette: red_drum
 plugins: [] # Disables native MkDocs search
 nav:
+  - about: about.md
   - graph: vis.md
   - search: search.md
 extra_css:

@@ -417,16 +417,75 @@ body::after {
     overflow-y: auto;
     margin-top: 0.5rem;
     text-align: left;
+    font-size: 0.82rem;
+    line-height: 1.25;
 }
 
-.word-paper-list ul {
-    margin: 0.25rem 0 0;
-    padding-left: 1.25rem;
+.paper-list-header {
+    margin-bottom: 0.35rem;
 }
 
-.word-paper-list li {
-    line-height: 1.15;
-    margin: 0.1rem 0;
+.paper-list-items {
+    display: grid;
+    gap: 0.42rem;
+}
+
+.paper-list-item {
+    padding-top: 0.35rem;
+    border-top: 1px solid color-mix(in srgb, var(--font-color) 12%, transparent);
+}
+
+.paper-list-item:first-child {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.paper-list-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--font-color);
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 2px;
+    transition: color 120ms ease, background-color 120ms ease;
+}
+
+body:not(.uga-theme-dark) .paper-list-link:hover,
+body:not(.uga-theme-dark) .paper-list-link:focus-visible {
+    color: #fff;
+    background: var(--primary-color);
+    text-decoration: none;
+}
+
+body.uga-theme-dark .paper-list-link:hover,
+body.uga-theme-dark .paper-list-link:focus-visible {
+    color: var(--font-color);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--primary-color) 62%, var(--font-color));
+    text-underline-offset: 2px;
+}
+
+.paper-list-link.is-disabled {
+    opacity: 0.84;
+    cursor: default;
+}
+
+.paper-link-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    flex-shrink: 0;
+}
+
+.paper-list-authors {
+    margin-top: 0.12rem;
+    color: color-mix(in srgb, var(--font-color) 44%, transparent);
+    font-size: 0.74rem;
+}
+
+.paper-list-empty {
+    margin: 0;
+    color: var(--secondary-color);
 }
 
 .cluster-year-chart {
@@ -722,7 +781,7 @@ body::after {
     width: 100%;
 }
 
-.terminal-menu > ul {
+.terminal-menu>ul {
     flex-direction: row !important;
     align-items: center;
     justify-content: flex-start !important;
@@ -731,7 +790,7 @@ body::after {
     margin: 0.5rem 0 0;
 }
 
-.terminal-menu > ul > li {
+.terminal-menu>ul>li {
     flex: 0 0 auto;
     margin: 0;
 }
@@ -811,11 +870,12 @@ body::after {
 .density-hover-detail {
     min-height: 3.25rem;
     margin-top: 0.75rem;
-    text-align: center;
+    text-align: left;
     color: var(--secondary-color);
     line-height: 1.35;
-    height: auto;
+    max-height: 170px;
     overflow-y: auto;
+    padding-right: 0.15rem;
 }
 
 .density-hover-detail strong {
@@ -978,7 +1038,7 @@ body::after {
     cursor: pointer;
 }
 
-.header-year-trigger > span:first-child {
+.header-year-trigger>span:first-child {
     font-size: 0.52rem;
     font-weight: 700;
 }
