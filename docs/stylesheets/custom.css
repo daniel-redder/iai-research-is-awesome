@@ -380,8 +380,9 @@ body::after {
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
+    align-items: stretch;
 }
 
 .dashboard-card {
@@ -394,8 +395,8 @@ body::after {
 }
 
 .word-cloud {
-    min-height: 130px;
-    height: 130px;
+    min-height: clamp(150px, 18vw, 220px);
+    height: auto;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -412,8 +413,8 @@ body::after {
 }
 
 .word-paper-list {
-    height: 150px;
-    max-height: 150px;
+    height: clamp(130px, 16vw, 190px);
+    max-height: clamp(130px, 16vw, 190px);
     overflow-y: auto;
     margin-top: 0.5rem;
     text-align: left;
@@ -830,8 +831,8 @@ body.uga-theme-dark .paper-list-link:focus-visible {
     width: 100%;
     max-width: 100%;
     overflow: hidden;
-    min-height: 120px;
-    max-height: 240px;
+    min-height: clamp(96px, 14vw, 160px);
+    max-height: clamp(170px, 26vw, 240px);
 }
 
 .density-grid {
@@ -909,6 +910,57 @@ body.uga-theme-dark .paper-list-link:focus-visible {
 
 .random-paper-header h2 {
     margin: 0;
+}
+
+.random-paper-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    margin: 0.35rem 0 0.55rem;
+    color: var(--secondary-color);
+    font-size: 0.8rem;
+}
+
+.random-paper-meta strong {
+    color: var(--font-color);
+}
+
+.random-paper-authors a {
+    color: var(--font-color);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.random-paper-authors a:hover,
+.random-paper-authors a:focus-visible {
+    color: var(--primary-color);
+}
+
+.random-paper-hero {
+    width: min(100%, 860px);
+    margin: 1.2rem auto 1rem;
+}
+
+.random-paper-card {
+    height: 365px;
+    display: flex;
+    flex-direction: column;
+}
+
+#random-paper-title {
+    margin: 0.75rem 0 0.5rem;
+}
+
+.random-paper-scroll {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+#random-paper-authors,
+#random-paper-abstract {
+    margin-top: 0;
 }
 
 .random-paper-actions {
@@ -995,17 +1047,6 @@ body.uga-theme-dark .paper-list-link:focus-visible {
     width: 10px;
     height: 10px;
     flex: 0 0 10px;
-}
-
-.word-paper-list {
-    height: 150px;
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.publication-density-chart {
-    max-height: 240px;
-    overflow-y: auto;
 }
 
 #mkdocs-terminal-site-name {
@@ -1260,6 +1301,91 @@ body.uga-theme-dark .paper-list-link:focus-visible {
 
 .horizontal-year-value {
     text-align: right;
+}
+
+/* Tiered responsive layout for dashboard cards and dense widgets. */
+@media (max-width: 84rem) {
+    #terminal-mkdocs-main-content {
+        width: min(94vw, 64rem);
+        max-width: 64rem;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .database-search-card {
+        grid-column: 1 / -1;
+    }
+
+    .random-paper-card {
+        height: clamp(340px, 48vh, 430px);
+    }
+}
+
+@media (max-width: 62rem) {
+    #terminal-mkdocs-main-content {
+        width: calc(100% - 22px);
+        max-width: calc(100% - 22px);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .database-search-card {
+        grid-column: auto;
+    }
+
+    .word-cloud {
+        min-height: 165px;
+    }
+
+    .word-paper-list {
+        height: 170px;
+        max-height: 170px;
+    }
+
+    .publication-density-chart {
+        overflow-x: auto;
+        overflow-y: hidden;
+        justify-content: flex-start;
+    }
+
+    .cluster-lab-heatmap-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .cluster-lab-heatmap-table {
+        min-width: 720px;
+        font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 30rem) {
+
+    .dashboard-card,
+    .repo-status-card {
+        padding: 0.7rem;
+    }
+
+    .random-paper-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .random-paper-card button,
+    .random-paper-card .random-paper-link {
+        min-height: 32px;
+        padding: 0.32rem 0.62rem;
+    }
+
+    .density-hover-detail {
+        max-height: 160px;
+    }
 }
 
 @media (max-width: 640px) {

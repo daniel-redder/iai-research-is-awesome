@@ -39,6 +39,27 @@
         return '';
     }
 
+    function normalizeName(name) {
+        return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    }
+
+    function abbreviateLabName(name) {
+        const full = String(name || '').trim();
+        if (!full) return 'Unknown';
+        const words = full.split(/[\s/&,-]+/).filter(Boolean);
+        if (words.length >= 2) {
+            const acronym = words.map(word => word[0]?.toUpperCase() || '').join('');
+            if (acronym.length >= 2 && acronym.length <= 8) return acronym;
+        }
+        return full.length > 12 ? `${full.slice(0, 11)}…` : full;
+    }
+
+    function formatIsoDate(value) {
+        if (typeof value !== 'string') return '';
+        const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+        return match ? match[1] : '';
+    }
+
     function detailPageUrl(pageName, params) {
         const url = new URL(`${pageName}/`, window.location.href);
         if (params && typeof params === 'object') {
@@ -64,8 +85,8 @@
         return paper.label || '';
     }
 
-    function internetIconMarkup() {
-        return '<svg class="paper-link-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"></circle><path d="M3 12h18M12 3a14 14 0 0 0 0 18M12 3a14 14 0 0 1 0 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>';
+    function gitIconMarkup() {
+        return '<svg class="paper-link-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M1 3.75a2.75 2.75 0 1 1 4.095 2.402l2.243 1.495A2.754 2.754 0 0 1 9.75 6h1.5a2.75 2.75 0 1 1 0 1.5h-1.5a1.25 1.25 0 1 0 0 2.5h1.5a2.75 2.75 0 1 1 0 1.5h-1.5A2.75 2.75 0 0 1 7 8.406L4.53 6.76A2.75 2.75 0 1 1 1 3.75Zm2.75-1.25a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm8.5 5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Zm0 5a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z"></path></svg>';
     }
 
     function summarizeAuthors(paper) {
@@ -84,8 +105,8 @@
             const safeAuthors = escapeHtml(summarizeAuthors(paper));
             const detailUrl = detailPageUrl('paper', { id: paper.id });
             const titleMarkup = paper.id
-                ? `<a class="paper-list-link" href="${detailUrl}">${internetIconMarkup()}<span>${safeTitle}</span></a>`
-                : `<span class="paper-list-link is-disabled">${internetIconMarkup()}<span>${safeTitle}</span></span>`;
+                ? `<a class="paper-list-link" href="${detailUrl}">${gitIconMarkup()}<span>${safeTitle}</span></a>`
+                : `<span class="paper-list-link is-disabled">${gitIconMarkup()}<span>${safeTitle}</span></span>`;
             return `<article class="paper-list-item">${titleMarkup}<div class="paper-list-authors">${safeAuthors}</div></article>`;
         }).join('');
         return `<div class="paper-list-header"><strong>${escapeHtml(title)}</strong></div><div class="paper-list-items">${rows}</div>`;
@@ -106,7 +127,30 @@
         throw new Error('Graph data could not be loaded');
     }
 
-    loadGraphData().then(data => {
+    async function loadHarvestState() {
+        const candidates = [
+            new URL('../data/harvest_state.json', window.location.href),
+            new URL('data/harvest_state.json', window.location.href),
+            new URL('/data/harvest_state.json', window.location.origin),
+            new URL('harvest_state.json', window.location.href),
+            new URL('/harvest_state.json', window.location.origin)
+        ];
+        for (const url of [...new Set(candidates.map(candidate => candidate.href))]) {
+            try {
+                const response = await fetch(url);
+                if (response.ok) return response.json();
+            } catch (error) { }
+        }
+        return null;
+    }
+
+    Promise.all([loadGraphData(), loadHarvestState()]).then(([data, harvestState]) => {
+        const latestSearchDate = formatIsoDate(harvestState?.last_run || harvestState?.forward_cursor || '');
+        const latestSearchEl = document.getElementById('repo-commit-date');
+        if (latestSearchEl) {
+            latestSearchEl.textContent = latestSearchDate || 'Unknown';
+        }
+
         const allPapers = data.nodes.filter(node => node.group === 'paper');
         const years = window.UGAYearFilter.availableYears(allPapers);
         let selectedYear = window.UGAYearFilter.selectedYear(allPapers);
@@ -195,9 +239,10 @@
                 if (!densityGrid) return;
                 const availableWidth = Math.max(1, densityChart.clientWidth - 8);
                 const weekCount = Math.max(1, weeks.length);
-                const gap = availableWidth < 500 ? 1 : 3;
-                const cellSize = Math.max(3, Math.floor((availableWidth - gap * (weekCount - 1)) / weekCount));
-                const fittedSize = Math.min(10, cellSize);
+                const compactView = availableWidth < 360;
+                const gap = compactView ? 2 : availableWidth < 500 ? 1 : 3;
+                const cellSize = Math.max(compactView ? 6 : 4, Math.floor((availableWidth - gap * (weekCount - 1)) / weekCount));
+                const fittedSize = compactView ? 6 : Math.min(10, cellSize);
                 densityGrid.style.gridAutoColumns = `${fittedSize}px`;
                 densityGrid.style.gridTemplateRows = `repeat(7, ${fittedSize}px)`;
                 densityGrid.style.gap = `${gap}px`;
@@ -284,45 +329,63 @@
         const cloud = document.getElementById('word-cloud');
         const wordPaperList = document.getElementById('word-paper-list');
         if (cloud) {
-            const max = topWords[0]?.[1] || 1;
             let lockedWord = null;
-            topWords.forEach(([word, count], index) => {
-                const span = document.createElement('span');
-                span.className = 'cloud-word';
-                span.textContent = word;
-                const scale = 0.75 + 1.5 * Math.sqrt(count / max);
-                span.style.fontSize = `${Math.round(12 * scale)}px`;
-                span.style.transform = `rotate(${index % 7 === 0 ? -4 : index % 7 === 3 ? 3 : 0}deg)`;
-                span.style.opacity = String(0.65 + 0.35 * (count / max));
-                span.setAttribute('tabindex', '0');
+            const max = topWords[0]?.[1] || 1;
 
-                const showMatches = () => {
-                    const matches = wordPapers.get(word) || [];
-                    const headline = `${word} · ${matches.length} paper${matches.length === 1 ? '' : 's'}`;
-                    wordPaperList.innerHTML = renderPaperList(headline, matches);
-                    wordPaperList.style.height = '150px';
-                    wordPaperList.style.maxHeight = '150px';
-                };
-                span.addEventListener('mouseenter', () => { if (!lockedWord) showMatches(); });
-                span.addEventListener('focus', () => { if (!lockedWord) showMatches(); });
-                span.addEventListener('mouseleave', () => { if (!lockedWord) wordPaperList.innerHTML = ''; });
-                span.addEventListener('blur', () => { if (!lockedWord) wordPaperList.innerHTML = ''; });
-                span.addEventListener('click', () => {
-                    if (lockedWord === word) {
-                        lockedWord = null;
-                        span.classList.remove('active');
-                        wordPaperList.innerHTML = '';
-                        wordPaperList.style.height = '150px';
-                        wordPaperList.style.maxHeight = '150px';
-                    } else {
-                        cloud.querySelectorAll('.cloud-word.active').forEach(active => active.classList.remove('active'));
-                        lockedWord = word;
-                        span.classList.add('active');
-                        showMatches();
-                    }
+            function showMatches(word) {
+                const matches = wordPapers.get(word) || [];
+                const headline = `${word} · ${matches.length} paper${matches.length === 1 ? '' : 's'}`;
+                wordPaperList.innerHTML = renderPaperList(headline, matches);
+            }
+
+            function renderWordCloud() {
+                const cloudWidth = Math.max(260, cloud.clientWidth || 0);
+                const compactView = cloudWidth < 380;
+                const renderWords = compactView ? topWords.slice(0, 10) : topWords;
+                const base = compactView
+                    ? Math.max(12, Math.min(17, Math.floor(cloudWidth / 22)))
+                    : Math.max(11, Math.min(18, Math.floor(cloudWidth / 24)));
+                cloud.innerHTML = '';
+
+                renderWords.forEach(([word, count], index) => {
+                    const span = document.createElement('span');
+                    span.className = 'cloud-word';
+                    span.textContent = word;
+                    const scale = compactView ? (0.74 + 1.18 * Math.sqrt(count / max)) : (0.75 + 1.4 * Math.sqrt(count / max));
+                    span.style.fontSize = `${Math.round(base * scale)}px`;
+                    span.style.transform = `rotate(${index % 7 === 0 ? -4 : index % 7 === 3 ? 3 : 0}deg)`;
+                    span.style.opacity = String(0.65 + 0.35 * (count / max));
+                    span.setAttribute('tabindex', '0');
+
+                    span.addEventListener('mouseenter', () => { if (!lockedWord) showMatches(word); });
+                    span.addEventListener('focus', () => { if (!lockedWord) showMatches(word); });
+                    span.addEventListener('mouseleave', () => { if (!lockedWord) wordPaperList.innerHTML = ''; });
+                    span.addEventListener('blur', () => { if (!lockedWord) wordPaperList.innerHTML = ''; });
+                    span.addEventListener('click', () => {
+                        if (lockedWord === word) {
+                            lockedWord = null;
+                            span.classList.remove('active');
+                            wordPaperList.innerHTML = '';
+                        } else {
+                            cloud.querySelectorAll('.cloud-word.active').forEach(active => active.classList.remove('active'));
+                            lockedWord = word;
+                            span.classList.add('active');
+                            showMatches(word);
+                        }
+                    });
+
+                    if (lockedWord === word) span.classList.add('active');
+                    cloud.appendChild(span);
                 });
-                cloud.appendChild(span);
-            });
+            }
+
+            renderWordCloud();
+            if ('ResizeObserver' in window) {
+                const cloudObserver = new ResizeObserver(renderWordCloud);
+                cloudObserver.observe(cloud);
+            } else {
+                window.addEventListener('resize', renderWordCloud);
+            }
         }
 
         const chart = document.getElementById('cluster-year-chart');
@@ -350,6 +413,7 @@
             } else {
                 const clusterList = [...clusters.entries()].sort((a, b) => a[0].localeCompare(b[0]));
                 const labList = [...labs.keys()].sort((a, b) => a.localeCompare(b));
+                const useCompactLabLabels = window.matchMedia('(max-width: 62rem)').matches;
                 const maxCount = Math.max(...clusterList.flatMap(([, counts]) => [...counts.values()]));
                 const table = document.createElement('table');
                 table.className = 'cluster-lab-heatmap-table';
@@ -375,7 +439,10 @@
                     const row = document.createElement('tr');
                     const label = document.createElement('th');
                     label.scope = 'row';
-                    label.textContent = lab;
+                    const compactLabName = abbreviateLabName(lab);
+                    label.textContent = useCompactLabLabels ? compactLabName : lab;
+                    label.title = lab;
+                    label.setAttribute('aria-label', lab);
                     row.appendChild(label);
 
                     clusterList.forEach(([cluster, counts]) => {
@@ -425,28 +492,36 @@
             const paper = papersPublishedThisYear[Math.floor(Math.random() * papersPublishedThisYear.length)];
             const abstract = abstractText(paper);
             const titleEl = document.getElementById('random-paper-title');
+            const publicationEl = document.getElementById('random-paper-publication-date');
+            const scanDateEl = document.getElementById('random-paper-scan-date');
             const authorsEl = document.getElementById('random-paper-authors');
             const abstractEl = document.getElementById('random-paper-abstract');
             const link = document.getElementById('random-paper-link');
             if (titleEl) titleEl.textContent = paper.label || 'Untitled paper';
+            if (publicationEl) publicationEl.textContent = formatIsoDate(paper.publication_date) || 'Unknown';
+            if (scanDateEl) scanDateEl.textContent = latestSearchDate || 'Unknown';
             if (authorsEl) {
                 authorsEl.replaceChildren();
                 const ugaAuthors = new Set(paper.uga_authors || []);
                 (paper.authors_raw || []).forEach((author, index) => {
                     if (index) authorsEl.append(document.createTextNode(', '));
                     const isUgaAuthor = ugaAuthors.has(author.id);
-                    const name = document.createElement(isUgaAuthor ? 'strong' : 'span');
-                    if (isUgaAuthor) name.className = 'uga-author-name';
-                    name.textContent = author.name || 'Unknown';
-                    authorsEl.append(name);
+                    const authorName = author?.name || 'Unknown';
+                    const authorId = author?.id || '';
+                    const authorHref = detailPageUrl('author', { name: normalizeName(authorName), id: authorId });
+                    const authorLink = document.createElement('a');
+                    authorLink.href = authorHref;
+                    authorLink.textContent = authorName;
+                    if (isUgaAuthor) authorLink.className = 'uga-author-name';
+                    authorsEl.append(authorLink);
                 });
                 if (!paper.authors_raw || !paper.authors_raw.length) authorsEl.textContent = 'Unknown authors';
             }
             if (abstractEl) abstractEl.textContent = abstract || 'Abstract unavailable.';
             if (link) {
-                const safeUrl = safeExternalUrl(paper.url);
-                if (safeUrl) {
-                    link.href = safeUrl;
+                const detailUrl = paper.id ? detailPageUrl('paper', { id: paper.id }) : '';
+                if (detailUrl) {
+                    link.href = detailUrl;
                     link.style.display = 'inline-block';
                 } else {
                     link.style.display = 'none';
